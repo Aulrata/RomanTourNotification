@@ -1,8 +1,8 @@
 using Itmo.Dev.Platform.Persistence.Abstractions.Extensions;
 using Itmo.Dev.Platform.Persistence.Postgres.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 using RomanTourNotification.Application.Abstractions.Persistence;
 using RomanTourNotification.Infrastructure.Persistence.Plugins;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace RomanTourNotification.Infrastructure.Persistence.Extensions;
 
