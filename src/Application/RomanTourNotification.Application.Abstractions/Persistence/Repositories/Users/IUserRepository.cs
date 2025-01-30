@@ -6,5 +6,5 @@ public interface IUserRepository
 {
     public Task<long> CreateUserAsync(User user, CancellationToken cancellationToken);
 
-    public Task<User?> GetUserByIdAsync(long userId, CancellationToken cancellationToken);
+    public Task<User?> GetUserByChatIdAsync(long chatId, CancellationToken cancellationToken);
 }

@@ -4,7 +4,7 @@ namespace RomanTourNotification.Application.Contracts.Users;
 
 public interface IUserService
 {
-    public Task CreateAsync(User user);
+    public Task<string> CreateAsync(User user, CancellationToken cancellationToken);
 
     public Task<User?> GetByIdAsync(long userId);
 }

@@ -40,8 +40,36 @@ public class UserRepository : IUserRepository
         return Convert.ToInt64(generatedId);
     }
 
-    public Task<User?> GetUserByIdAsync(long userId, CancellationToken cancellationToken)
+    public async Task<User?> GetUserByChatIdAsync(long chatId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        const string sql = """
+                           SELECT user_id, first_name, last_name, user_role, chat_id, created_at
+                           FROM users
+                           WHERE chat_id = :chat_id;
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter("chat_id", chatId),
+            },
+        };
+
+        await using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        if (await reader.ReadAsync(cancellationToken))
+        {
+            return new User(
+                reader.GetInt64(reader.GetOrdinal("user_id")),
+                reader.GetString(reader.GetOrdinal("first_name")),
+                reader.GetString(reader.GetOrdinal("last_name")),
+                reader.GetFieldValue<UserRole>(reader.GetOrdinal("user_role")),
+                reader.GetInt64(reader.GetOrdinal("chat_id")),
+                reader.GetDateTime(reader.GetOrdinal("created_at")));
+        }
+
+        return null;
     }
 }
