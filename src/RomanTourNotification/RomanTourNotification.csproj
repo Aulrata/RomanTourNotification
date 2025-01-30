@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup>  <UserSecretsId>87005c99-fd70-4d2e-b417-b5fbbe734f43</UserSecretsId>
+  </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Application\RomanTourNotification.Application\RomanTourNotification.Application.csproj"/>
-        <ProjectReference Include="..\Infrastructure\RomanTourNotification.Infrastructure.Persistence\RomanTourNotification.Infrastructure.Persistence.csproj"/>
-        <ProjectReference Include="..\Presentation\RomanTourNotification.Presentation.Grpc\RomanTourNotification.Presentation.Grpc.csproj"/>
-        <ProjectReference Include="..\Presentation\RomanTourNotification.Presentation.Kafka\RomanTourNotification.Presentation.Kafka.csproj"/>
+        <ProjectReference Include="..\Application\RomanTourNotification.Application\RomanTourNotification.Application.csproj" />
+        <ProjectReference Include="..\Infrastructure\RomanTourNotification.Infrastructure.Persistence\RomanTourNotification.Infrastructure.Persistence.csproj" />
+        <ProjectReference Include="..\Presentation\RomanTourNotification.Presentation.Grpc\RomanTourNotification.Presentation.Grpc.csproj" />
+        <ProjectReference Include="..\Presentation\RomanTourNotification.Presentation.Kafka\RomanTourNotification.Presentation.Kafka.csproj" />
     </ItemGroup>
 
     <ItemGroup>

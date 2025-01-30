@@ -6,6 +6,7 @@
 
     <ItemGroup>
       <PackageReference Include="Itmo.Dev.Platform.Events" />
+      <PackageReference Include="Telegram.Bot" />
     </ItemGroup>
 
 </Project>

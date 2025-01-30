@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using RomanTourNotification.Application.Bots;
+using RomanTourNotification.Application.Contracts.Bots;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.Users;
 
@@ -10,6 +12,7 @@ public static class ServiceCollectionExtensions
     {
         // TODO: add services
         collection.AddSingleton<IUserService, UserService>();
+        collection.AddSingleton<INotificationBotService, NotificationBotService>();
         return collection;
     }
 }
