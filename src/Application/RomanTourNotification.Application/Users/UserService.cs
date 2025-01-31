@@ -35,8 +35,9 @@ public class UserService : IUserService
         return "User created successfully.";
     }
 
-    public Task<User?> GetByIdAsync(long userId)
+    public async Task<User?> GetByIdAsync(long userId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        User? user = await _userRepository.GetUserByChatIdAsync(userId, cancellationToken);
+        return user;
     }
 }
