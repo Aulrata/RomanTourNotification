@@ -2,9 +2,10 @@ using Itmo.Dev.Platform.Common.Extensions;
 using Itmo.Dev.Platform.Observability;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using RomanTourNotification.Application.Contracts.Bots;
 using RomanTourNotification.Application.Extensions;
 using RomanTourNotification.Infrastructure.Persistence.Extensions;
+using RomanTourNotification.Presentation.TelegramBot.Extensions;
+using RomanTourNotification.Presentation.TelegramBot.Receiving;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -18,20 +19,22 @@ builder.AddPlatformObservability();
 
 builder.Services.AddApplication();
 builder.Services.AddBotExtensions(builder.Configuration);
-
+builder.Services.AddTelegramBot();
 builder.Services.AddInfrastructurePersistence();
 
 builder.Services.AddUtcDateTimeProvider();
 
 WebApplication app = builder.Build();
 
-INotificationBotService notificationBot = app.Services.GetRequiredService<INotificationBotService>();
+NotificationBotReceiving notificationBot = app.Services.GetRequiredService<NotificationBotReceiving>();
 
 using var cts = new CancellationTokenSource();
+
 await notificationBot.StartAsync(cts.Token);
 
 app.UseRouting();
 
 app.UsePlatformObservability();
 
+// await notificationBot.StartAsync(cts.Token);
 await app.RunAsync();

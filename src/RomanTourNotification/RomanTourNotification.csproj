@@ -4,6 +4,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Application\RomanTourNotification.Application\RomanTourNotification.Application.csproj" />
         <ProjectReference Include="..\Infrastructure\RomanTourNotification.Infrastructure.Persistence\RomanTourNotification.Infrastructure.Persistence.csproj" />
+        <ProjectReference Include="..\Presentation\RomanTourNotification.Presentation.TelegramBot\RomanTourNotification.Presentation.TelegramBot.csproj" />
     </ItemGroup>
 
     <ItemGroup>

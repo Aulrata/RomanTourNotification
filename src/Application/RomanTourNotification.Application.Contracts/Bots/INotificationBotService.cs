@@ -1,6 +1,8 @@
+using Telegram.Bot;
+
 namespace RomanTourNotification.Application.Contracts.Bots;
 
 public interface INotificationBotService
 {
-    public Task StartAsync(CancellationToken cancellationToken);
+    public Task StartAsync(ITelegramBotClient botClient, CancellationToken cancellationToken);
 }
