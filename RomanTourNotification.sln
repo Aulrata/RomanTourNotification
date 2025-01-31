@@ -26,10 +26,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentatio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RomanTourNotification.Infrastructure.Persistence", "src\Infrastructure\RomanTourNotification.Infrastructure.Persistence\RomanTourNotification.Infrastructure.Persistence.csproj", "{E0C7A0FA-E3B6-4C7C-8360-CD72806AAC66}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RomanTourNotification.Presentation.Grpc", "src\Presentation\RomanTourNotification.Presentation.Grpc\RomanTourNotification.Presentation.Grpc.csproj", "{CC78330E-636F-48B2-A1AE-C8E6566275DD}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RomanTourNotification.Presentation.Kafka", "src\Presentation\RomanTourNotification.Presentation.Kafka\RomanTourNotification.Presentation.Kafka.csproj", "{59AFF02F-828D-4BF6-A5AC-C56A1F30EF6B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RomanTourNotification", "src\RomanTourNotification\RomanTourNotification.csproj", "{AE85F8D2-4986-40AE-A92C-683CE1DB59BC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RomanTourNotification.Presentation.TelegramBot", "src\Presentation\RomanTourNotification.Presentation.TelegramBot\RomanTourNotification.Presentation.TelegramBot.csproj", "{D9F9710F-5C29-4D94-BE3B-9404346E1233}"
@@ -48,8 +44,6 @@ Global
 		{6612692B-A111-4856-A058-9CF4C2672F92} = {A5DDAC88-3B8F-4674-8E0C-F8A50A52ACD3}
 		{683CE8ED-DAEA-4EAB-B1B4-FF5098763CFF} = {A5DDAC88-3B8F-4674-8E0C-F8A50A52ACD3}
 		{E0C7A0FA-E3B6-4C7C-8360-CD72806AAC66} = {6612692B-A111-4856-A058-9CF4C2672F92}
-		{CC78330E-636F-48B2-A1AE-C8E6566275DD} = {683CE8ED-DAEA-4EAB-B1B4-FF5098763CFF}
-		{59AFF02F-828D-4BF6-A5AC-C56A1F30EF6B} = {683CE8ED-DAEA-4EAB-B1B4-FF5098763CFF}
 		{AE85F8D2-4986-40AE-A92C-683CE1DB59BC} = {A5DDAC88-3B8F-4674-8E0C-F8A50A52ACD3}
 		{D9F9710F-5C29-4D94-BE3B-9404346E1233} = {683CE8ED-DAEA-4EAB-B1B4-FF5098763CFF}
 	EndGlobalSection
@@ -74,14 +68,6 @@ Global
 		{E0C7A0FA-E3B6-4C7C-8360-CD72806AAC66}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0C7A0FA-E3B6-4C7C-8360-CD72806AAC66}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0C7A0FA-E3B6-4C7C-8360-CD72806AAC66}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CC78330E-636F-48B2-A1AE-C8E6566275DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CC78330E-636F-48B2-A1AE-C8E6566275DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC78330E-636F-48B2-A1AE-C8E6566275DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CC78330E-636F-48B2-A1AE-C8E6566275DD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{59AFF02F-828D-4BF6-A5AC-C56A1F30EF6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59AFF02F-828D-4BF6-A5AC-C56A1F30EF6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{59AFF02F-828D-4BF6-A5AC-C56A1F30EF6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{59AFF02F-828D-4BF6-A5AC-C56A1F30EF6B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AE85F8D2-4986-40AE-A92C-683CE1DB59BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AE85F8D2-4986-40AE-A92C-683CE1DB59BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE85F8D2-4986-40AE-A92C-683CE1DB59BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
