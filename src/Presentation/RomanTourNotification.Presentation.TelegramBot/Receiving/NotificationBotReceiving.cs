@@ -43,25 +43,45 @@ public class NotificationBotReceiving
     {
         try
         {
+            string text;
+            long userId;
             Message? message = update.Message;
+            CallbackQuery? callbackQuery = update.CallbackQuery;
 
-            if (message is null || string.IsNullOrEmpty(message.Text))
+            if (message is not null)
+            {
+                text = message.Text ?? string.Empty;
+                userId = message.Chat.Id;
+            }
+            else if (callbackQuery is not null)
+            {
+                text = callbackQuery.Data ?? string.Empty;
+                userId = callbackQuery.From.Id;
+            }
+            else
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(text))
                 return;
 
-            long userId = message.Chat.Id;
-
-            if (!_users.ContainsKey(userId))
+            if (!_users.TryGetValue(userId, out User? value))
             {
                 User? user = await _userService.GetByIdAsync(userId, cancellationToken);
 
                 if (user is null)
                     return;
 
-                _users.Add(userId, user);
+                value = user;
+
+                _users.Add(userId, value);
             }
 
-            var handler = new HandlerContext(_users[userId], message.Text, _botClient);
+            var handler = new HandlerContext(value, text, _botClient);
             var startHandler = new StartHandler();
+            var userHandler = new UserHandler();
+            await startHandler.SetNext(userHandler);
             await startHandler.Handle(handler);
         }
         catch (Exception ex)
