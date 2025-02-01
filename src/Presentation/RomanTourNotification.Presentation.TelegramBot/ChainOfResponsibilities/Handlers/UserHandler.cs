@@ -4,13 +4,13 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities.Handlers;
 
-public class StartHandler : CommandHandler
+public class UserHandler : CommandHandler
 {
     public override async Task Handle(HandlerContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (context.Message != "/start")
+        if (context.Message != "users")
         {
             await base.Handle(context);
             return;
@@ -18,12 +18,8 @@ public class StartHandler : CommandHandler
 
         var keyboard = new InlineKeyboardMarkup([
             [
-                InlineKeyboardButton.WithCallbackData("Пользователи", "users"),
-                InlineKeyboardButton.WithCallbackData("Обо мне", "about_me")
-            ],
-            [
-                InlineKeyboardButton.WithCallbackData("Группы", "groups"),
-                InlineKeyboardButton.WithCallbackData("Ничего", "nothing")
+                InlineKeyboardButton.WithCallbackData("Добавить пользователя", "user_add"),
+                InlineKeyboardButton.WithCallbackData("Изменить роль пользователю", "user_change_role")
             ]
         ]);
 
