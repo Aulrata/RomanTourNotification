@@ -20,7 +20,7 @@ public class NotificationBotService : INotificationBotService
 
             if (DateTime.UtcNow.Hour != 6 || DateTime.UtcNow.Minute != 0) continue;
 
-            await botClient.SendMessage(-4556017977, "Запланированное сообщение на 9:00", cancellationToken: cancellationToken);
+            await botClient.SendMessage(-4556017977, "Запланированное сообщение на 9:00. Это означает что сервер работает стабильно.", cancellationToken: cancellationToken);
             await Task.Delay(61 * 1000, cancellationToken);
         }
 
