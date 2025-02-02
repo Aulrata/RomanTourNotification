@@ -11,14 +11,16 @@ public class NotificationBotService : INotificationBotService
 
     public async Task StartAsync(ITelegramBotClient botClient, CancellationToken cancellationToken)
     {
+        Console.WriteLine("Start message");
+
         while (true)
         {
             if (cancellationToken.IsCancellationRequested)
                 break;
 
-            if (DateTime.UtcNow.Hour != 0 || DateTime.UtcNow.Minute != 57) continue;
+            if (DateTime.UtcNow.Hour != 6 || DateTime.UtcNow.Minute != 0) continue;
 
-            await botClient.SendMessage(-1001844409797, "Запланированное сообщение", cancellationToken: cancellationToken);
+            await botClient.SendMessage(-4556017977, "Запланированное сообщение на 9:00", cancellationToken: cancellationToken);
             await Task.Delay(61 * 1000, cancellationToken);
         }
 
