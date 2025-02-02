@@ -8,23 +8,37 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0' 
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Run tests
+        run: dotnet test
 
-      - name: Build
-        run: dotnet build --no-restore
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.TOKEN_GITHUB }}" | docker login ghcr.io -u $ACTOR_GITHUB --password-stdin
 
-      - name: Test
-        run: dotnet test --no-build --verbosity normal
+      - name: Build and push Docker image
+        run: |
+          docker build -t ghcr.io/aulrata/romantour-notification:latest .
+          docker push ghcr.io/aulrata/romantour-notification:latest
+
+      - name: SSH into server and restart containers
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /path/to/docker-compose
+            docker compose pull app
+            docker compose up -d --force-recreate
+            docker image prune -f
