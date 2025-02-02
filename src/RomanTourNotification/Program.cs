@@ -25,12 +25,22 @@ builder.Services.AddInfrastructurePersistence();
 builder.Services.AddUtcDateTimeProvider();
 
 WebApplication app = builder.Build();
+NotificationBotReceiving? notificationBot = null;
 
-NotificationBotReceiving notificationBot = app.Services.GetRequiredService<NotificationBotReceiving>();
+try
+{
+    notificationBot = app.Services.GetRequiredService<NotificationBotReceiving>();
+}
+catch (Exception ex)
+{
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine($"Error: {ex.Message}");
+    Console.ForegroundColor = ConsoleColor.Gray;
+}
 
 using var cts = new CancellationTokenSource();
 
-await notificationBot.StartAsync(cts.Token);
+if (notificationBot is not null) await notificationBot.StartAsync(cts.Token);
 
 app.UseRouting();
 

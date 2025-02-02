@@ -10,13 +10,19 @@ public static class BotExtensions
 {
     public static IServiceCollection AddBotExtensions(this IServiceCollection collection, IConfiguration configuration)
     {
-        collection.Configure<BotSettings>(configuration.GetSection("BotSettings"));
-
-        collection.AddSingleton<ITelegramBotClient>(provide =>
+        try
         {
-            BotSettings botSettings = provide.GetRequiredService<IOptions<BotSettings>>().Value;
-            return new TelegramBotClient(botSettings.NotificationBot.Token);
-        });
+            collection.Configure<BotSettings>(configuration.GetSection("BotSettings"));
+            collection.AddSingleton<ITelegramBotClient>(provide =>
+            {
+                BotSettings botSettings = provide.GetRequiredService<IOptions<BotSettings>>().Value;
+                return new TelegramBotClient(botSettings.NotificationBot.Token);
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
 
         return collection;
     }
