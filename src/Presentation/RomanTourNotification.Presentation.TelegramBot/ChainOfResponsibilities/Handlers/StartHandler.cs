@@ -23,7 +23,7 @@ public class StartHandler : CommandHandler
             ],
             [
                 InlineKeyboardButton.WithCallbackData("Группы", "groups"),
-                InlineKeyboardButton.WithCallbackData("Ничего", "nothing")
+                InlineKeyboardButton.WithCallbackData("Тест", "nothing")
             ]
         ]);
 
