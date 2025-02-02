@@ -1,9 +1,38 @@
 services:
-  users:
+  postgres:
     image: postgres:latest
+    container_name: postgres-db
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "6432:5432"
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-h", "postgres", "-U", "postgres" ]
+      interval: 2s
+      retries: 5
+
+  app:
+    image: ghcr.io/aulrata/romantour-notification:latest
+    container_name: romantour-app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+    environment:
+      Infrastructure__Persistence__Postgres__Host: postgres
+      Infrastructure__Persistence__Postgres__Database: postgres
+      Infrastructure__Persistence__Postgres__Username: postgres
+      Infrastructure__Persistence__Postgres__Password: postgres
+      Infrastructure__Persistence__Postgres__Port: 5432
+
+volumes:
+  postgres_data:
