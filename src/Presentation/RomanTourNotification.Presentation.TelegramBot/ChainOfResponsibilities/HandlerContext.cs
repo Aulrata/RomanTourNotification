@@ -3,4 +3,9 @@ using Telegram.Bot;
 
 namespace RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities;
 
-public record HandlerContext(User User, string Message, ITelegramBotClient BotClient);
+public record HandlerContext(
+    User User,
+    string Message,
+    ITelegramBotClient BotClient,
+    CancellationToken CancellationToken,
+    int MessageId = 0);
