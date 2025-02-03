@@ -5,6 +5,7 @@ using RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities.Han
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using User = RomanTourNotification.Application.Models.Users.User;
 
 namespace RomanTourNotification.Presentation.TelegramBot.Receiving;
@@ -16,7 +17,10 @@ public class NotificationBotReceiving
     private readonly INotificationBotService _notificationBotService;
     private readonly Dictionary<long, User> _users;
 
-    public NotificationBotReceiving(ITelegramBotClient botClient, IUserService userService, INotificationBotService notificationBotService)
+    public NotificationBotReceiving(
+        ITelegramBotClient botClient,
+        IUserService userService,
+        INotificationBotService notificationBotService)
     {
         _botClient = botClient;
         _userService = userService;
@@ -43,27 +47,56 @@ public class NotificationBotReceiving
     {
         try
         {
-            string text;
-            long userId;
-            Message? message = update.Message;
-            CallbackQuery? callbackQuery = update.CallbackQuery;
+            string text = string.Empty;
+            long userId = 0;
+            int messageId = 0;
 
-            if (message is not null)
+            switch (update.Type)
             {
-                text = message.Text ?? string.Empty;
-                userId = message.Chat.Id;
-            }
-            else if (callbackQuery is not null)
-            {
-                text = callbackQuery.Data ?? string.Empty;
-                userId = callbackQuery.From.Id;
-            }
-            else
-            {
-                return;
+                case UpdateType.CallbackQuery:
+
+                    CallbackQuery? callbackQuery = update.CallbackQuery;
+
+                    if (callbackQuery is null)
+                        return;
+
+                    text = callbackQuery.Data ?? string.Empty;
+                    userId = callbackQuery.From.Id;
+
+                    if (callbackQuery.Message is not null)
+                        messageId = callbackQuery.Message.MessageId;
+
+                    break;
+                case UpdateType.Message:
+
+                    Message? message = update.Message;
+
+                    if (message is null)
+                        return;
+
+                    text = message.Text ?? string.Empty;
+                    userId = message.Chat.Id;
+
+                    break;
+                case UpdateType.MyChatMember:
+                    ChatMemberUpdated? chatMember = update.MyChatMember;
+                    if (chatMember is null)
+                        return;
+
+                    long groupId = chatMember.Chat.Id;
+                    string groupTitle = chatMember.Chat.Title ?? "Нет данных";
+                    long idFrom = chatMember.From.Id;
+                    string firstNameFrom = chatMember.From.FirstName;
+                    string lastNameFrom = chatMember.From.LastName ?? "Нет данных";
+                    string userNameFrom = chatMember.From.Username ?? "Нет данных";
+                    DateTime date = chatMember.Date;
+
+                    Console.WriteLine($"Пользователь {userNameFrom}. Имя: {firstNameFrom}, фамилия: {lastNameFrom}, " +
+                                      $"Id: {idFrom} добавил бота в группу: {groupTitle}, Id: {groupId}. Дата: {date}");
+                    break;
             }
 
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrEmpty(text) || userId == 0)
                 return;
 
             if (!_users.TryGetValue(userId, out User? value))
@@ -78,7 +111,7 @@ public class NotificationBotReceiving
                 _users.Add(userId, value);
             }
 
-            var handler = new HandlerContext(value, text, _botClient);
+            var handler = new HandlerContext(value, text, _botClient, cancellationToken, messageId);
             var startHandler = new StartHandler();
             var userHandler = new UserHandler();
             await startHandler.SetNext(userHandler);
@@ -86,7 +119,7 @@ public class NotificationBotReceiving
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message} ");
+            Console.WriteLine($"Bot Error: {ex.Message} ");
         }
     }
 
