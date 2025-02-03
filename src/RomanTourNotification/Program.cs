@@ -21,6 +21,7 @@ builder.Services.AddApplication();
 builder.Services.AddBotExtensions(builder.Configuration);
 builder.Services.AddTelegramBot();
 builder.Services.AddInfrastructurePersistence();
+builder.Services.AddHostedServices();
 
 builder.Services.AddUtcDateTimeProvider();
 
@@ -34,7 +35,7 @@ try
 catch (Exception ex)
 {
     Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine($"Error: {ex.Message}");
+    Console.WriteLine($"Program Error: {ex.Message}");
     Console.ForegroundColor = ConsoleColor.Gray;
 }
 
