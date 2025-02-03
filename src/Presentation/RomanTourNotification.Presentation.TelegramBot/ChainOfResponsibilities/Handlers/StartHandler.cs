@@ -18,12 +18,12 @@ public class StartHandler : CommandHandler
 
         var keyboard = new InlineKeyboardMarkup([
             [
-                InlineKeyboardButton.WithCallbackData("Пользователи", "users"),
-                InlineKeyboardButton.WithCallbackData("Обо мне", "about_me")
+                InlineKeyboardButton.WithCallbackData("Пользователи", "/users"),
+                InlineKeyboardButton.WithCallbackData("Обо мне", "/about_me")
             ],
             [
-                InlineKeyboardButton.WithCallbackData("Группы", "groups"),
-                InlineKeyboardButton.WithCallbackData("Тест", "nothing")
+                InlineKeyboardButton.WithCallbackData("Группы", "/groups"),
+                InlineKeyboardButton.WithCallbackData("Тест", "/nothing")
             ]
         ]);
 
@@ -31,6 +31,7 @@ public class StartHandler : CommandHandler
             context.User.ChatId,
             "Выберите пункт настроек",
             parseMode: ParseMode.Markdown,
-            replyMarkup: keyboard);
+            replyMarkup: keyboard,
+            cancellationToken: context.CancellationToken);
     }
 }
