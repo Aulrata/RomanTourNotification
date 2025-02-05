@@ -17,8 +17,8 @@ public class GroupRepository : IGroupRepository
     public async Task<long> CreateAsync(Group group, CancellationToken cancellationToken)
     {
         const string sql = """
-                           INSERT INTO groups (title, group_id, user_id, approve, group_type, created_at)
-                           VALUES (:title, :group_id, :user_id, :approve, :group_type, :created_at)
+                           INSERT INTO groups (title, group_id, user_id, group_type, created_at)
+                           VALUES (:title, :group_id, :user_id, :group_type, :created_at)
                            RETURNING id;
                            """;
         await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
@@ -30,7 +30,6 @@ public class GroupRepository : IGroupRepository
                 new NpgsqlParameter("title", group.Title),
                 new NpgsqlParameter("group_id", group.GroupId),
                 new NpgsqlParameter("user_id", group.UserId),
-                new NpgsqlParameter("approve", group.Approve),
                 new NpgsqlParameter("group_type", group.GroupType),
                 new NpgsqlParameter("created_at", group.CreatedAt),
             },
@@ -41,12 +40,34 @@ public class GroupRepository : IGroupRepository
         return Convert.ToInt64(generatedId);
     }
 
+    public async Task<long> DeleteAsync(long groupId, CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           DELETE FROM groups
+                           WHERE group_id = :group_id
+                           RETURNING group_id;
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter("group_id", groupId),
+            },
+        };
+
+        object? deletedId = await command.ExecuteScalarAsync(cancellationToken);
+
+        return Convert.ToInt64(deletedId);
+    }
+
     public async Task<IEnumerable<Group>?> GetAllAsync(CancellationToken cancellationToken)
     {
         const string sql = """
-                           SELECT id, title, group_id, user_id, approve, group_type, created_at
+                           SELECT id, title, group_id, user_id, group_type, created_at
                            FROM groups
-                           WHERE approve IS NOT 'unspecified';
+                           WHERE group_type != 'unspecified';
                            """;
 
         await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
@@ -62,7 +83,6 @@ public class GroupRepository : IGroupRepository
                 reader.GetString(reader.GetOrdinal("title")),
                 reader.GetInt64(reader.GetOrdinal("group_id")),
                 reader.GetInt64(reader.GetOrdinal("user_id")),
-                reader.GetBoolean(reader.GetOrdinal("approve")),
                 reader.GetFieldValue<GroupType>(reader.GetOrdinal("group_type")),
                 reader.GetDateTime(reader.GetOrdinal("created_at")));
 
@@ -75,7 +95,7 @@ public class GroupRepository : IGroupRepository
     public async Task<Group?> GetByGroupIdAsync(long groupId, CancellationToken cancellationToken)
     {
         const string sql = """
-                           SELECT id, title, group_id, user_id, approve, group_type, created_at
+                           SELECT id, title, group_id, user_id, group_type, created_at
                            FROM groups
                            WHERE group_id = :group_id;
                            """;
@@ -98,7 +118,6 @@ public class GroupRepository : IGroupRepository
                 reader.GetString(reader.GetOrdinal("title")),
                 reader.GetInt64(reader.GetOrdinal("group_id")),
                 reader.GetInt64(reader.GetOrdinal("user_id")),
-                reader.GetBoolean(reader.GetOrdinal("approve")),
                 reader.GetFieldValue<GroupType>(reader.GetOrdinal("group_type")),
                 reader.GetDateTime(reader.GetOrdinal("created_at")));
         }

@@ -14,7 +14,7 @@ public class GroupService : IGroupService
         _groupRepository = groupRepository;
     }
 
-    public async Task<string> AddGroupAsync(Group group, CancellationToken cancellationToken)
+    public async Task<Group?> AddAsync(Group group, CancellationToken cancellationToken)
     {
         using var transaction = new TransactionScope(
             TransactionScopeOption.Required,
@@ -24,16 +24,21 @@ public class GroupService : IGroupService
         Group? oldGroup = await _groupRepository.GetByGroupIdAsync(group.GroupId, cancellationToken);
 
         if (oldGroup is not null)
-            return "Group already exists.";
+            return null;
 
         await _groupRepository.CreateAsync(group, cancellationToken);
 
         transaction.Complete();
 
-        return "Group created successfully.";
+        return group;
     }
 
-    public Task<IEnumerable<Group>?> GetAllGroupsAsync(CancellationToken cancellationToken)
+    public async Task<long> DeleteAsync(long groupId, CancellationToken cancellationToken)
+    {
+        return await _groupRepository.DeleteAsync(groupId, cancellationToken);
+    }
+
+    public Task<IEnumerable<Group>?> GetAllAsync(CancellationToken cancellationToken)
     {
         return _groupRepository.GetAllAsync(cancellationToken);
     }
