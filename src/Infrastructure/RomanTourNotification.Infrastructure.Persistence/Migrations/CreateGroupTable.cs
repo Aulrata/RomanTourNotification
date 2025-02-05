@@ -17,7 +17,6 @@ public class CreateGroupTable : Migration
                 title VARCHAR(50) NOT NULL,
                 group_id BIGINT NOT NULL,
                 user_id BIGINT NOT NULL,
-                approve BOOL NOT NULL DEFAULT FALSE,
                 group_type group_type NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
             );

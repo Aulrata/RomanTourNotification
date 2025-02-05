@@ -5,6 +5,5 @@ public record Group(
     string Title,
     long GroupId,
     long UserId,
-    bool Approve,
     GroupType GroupType,
     DateTime CreatedAt);
