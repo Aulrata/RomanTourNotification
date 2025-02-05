@@ -1,5 +1,6 @@
-using RomanTourNotification.Application.Contracts.Bots;
+using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Contracts.Users;
+using RomanTourNotification.Application.Models.Groups;
 using RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities;
 using RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities.Handlers;
 using Telegram.Bot;
@@ -14,17 +15,17 @@ public class NotificationBotReceiving
 {
     private readonly ITelegramBotClient _botClient;
     private readonly IUserService _userService;
-    private readonly INotificationBotService _notificationBotService;
+    private readonly IGroupService _groupService;
     private readonly Dictionary<long, User> _users;
 
     public NotificationBotReceiving(
         ITelegramBotClient botClient,
         IUserService userService,
-        INotificationBotService notificationBotService)
+        IGroupService groupService)
     {
         _botClient = botClient;
         _userService = userService;
-        _notificationBotService = notificationBotService;
+        _groupService = groupService;
         _users = [];
     }
 
@@ -38,9 +39,8 @@ public class NotificationBotReceiving
             receiverOptions: receiverOptions,
             cancellationToken: cancellationToken);
 
-        Console.WriteLine($"Notification bot started");
-
-        await _notificationBotService.StartAsync(_botClient, cancellationToken);
+        Telegram.Bot.Types.User bot = await _botClient.GetMe(cancellationToken);
+        Console.WriteLine($"{bot.Username} started");
     }
 
     private async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
@@ -67,6 +67,7 @@ public class NotificationBotReceiving
                         messageId = callbackQuery.Message.MessageId;
 
                     break;
+
                 case UpdateType.Message:
 
                     Message? message = update.Message;
@@ -78,21 +79,33 @@ public class NotificationBotReceiving
                     userId = message.Chat.Id;
 
                     break;
+
                 case UpdateType.MyChatMember:
                     ChatMemberUpdated? chatMember = update.MyChatMember;
                     if (chatMember is null)
                         return;
 
-                    long groupId = chatMember.Chat.Id;
-                    string groupTitle = chatMember.Chat.Title ?? "Нет данных";
-                    long idFrom = chatMember.From.Id;
-                    string firstNameFrom = chatMember.From.FirstName;
-                    string lastNameFrom = chatMember.From.LastName ?? "Нет данных";
-                    string userNameFrom = chatMember.From.Username ?? "Нет данных";
-                    DateTime date = chatMember.Date;
+                    long id = chatMember.From.Id;
 
-                    Console.WriteLine($"Пользователь {userNameFrom}. Имя: {firstNameFrom}, фамилия: {lastNameFrom}, " +
-                                      $"Id: {idFrom} добавил бота в группу: {groupTitle}, Id: {groupId}. Дата: {date}");
+                    if (!_users.ContainsKey(id))
+                    {
+                        User? user = await _userService.GetByIdAsync(id, cancellationToken);
+
+                        if (user is null)
+                            return;
+                    }
+
+                    switch (chatMember.NewChatMember.Status)
+                    {
+                        case ChatMemberStatus.Left:
+                            await DeleteGroup(chatMember, cancellationToken);
+                            break;
+
+                        case ChatMemberStatus.Member:
+                            await AddGroup(chatMember, cancellationToken);
+                            break;
+                    }
+
                     break;
             }
 
@@ -126,5 +139,43 @@ public class NotificationBotReceiving
     private Task HandleErrorAsync(Exception exception, CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
+    }
+
+    private async Task AddGroup(ChatMemberUpdated chatMember, CancellationToken cancellationToken)
+    {
+        long groupId = chatMember.Chat.Id;
+        string groupTitle = chatMember.Chat.Title ?? "Нет данных";
+        long idFrom = chatMember.From.Id;
+        string userNameFrom = chatMember.From.Username ?? "Нет данных";
+
+        var group = new Group(null, groupTitle, groupId, idFrom, GroupType.Unspecified, DateTime.Now);
+
+        Group? addedGroup = await _groupService.AddAsync(group, cancellationToken);
+
+        if (addedGroup is null)
+        {
+            Console.WriteLine("Group already exists");
+            return;
+        }
+
+        Console.WriteLine($"Пользователь {userNameFrom} добавил бота в группу {groupTitle}");
+
+        await _botClient.SendMessage(
+            group.GroupId,
+            $"Пользователь {userNameFrom} добавил бота в группу {groupTitle}",
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task DeleteGroup(ChatMemberUpdated chatMember, CancellationToken cancellationToken)
+    {
+        long deletedGroup = await _groupService.DeleteAsync(chatMember.Chat.Id, cancellationToken);
+
+        if (deletedGroup == 0)
+        {
+            Console.WriteLine("Group already deleted");
+            return;
+        }
+
+        Console.WriteLine($"Пользователь {chatMember.From.Username} удалил бота из группы {chatMember.Chat.Title}");
     }
 }

@@ -21,7 +21,9 @@ builder.Services.AddApplication();
 builder.Services.AddBotExtensions(builder.Configuration);
 builder.Services.AddTelegramBot();
 builder.Services.AddInfrastructurePersistence();
+
 builder.Services.AddHostedServices();
+builder.Services.AddHostedApplicationServices();
 
 builder.Services.AddUtcDateTimeProvider();
 
@@ -42,10 +44,9 @@ catch (Exception ex)
 using var cts = new CancellationTokenSource();
 
 if (notificationBot is not null) await notificationBot.StartAsync(cts.Token);
-
 app.UseRouting();
 
 app.UsePlatformObservability();
 
-// await notificationBot.StartAsync(cts.Token);
+Console.WriteLine("App started");
 await app.RunAsync();
