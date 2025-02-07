@@ -109,7 +109,7 @@ public class NotificationBotReceiving
                     break;
             }
 
-            if (string.IsNullOrEmpty(text) || userId == 0)
+            if (string.IsNullOrEmpty(text) || userId <= 0)
                 return;
 
             if (!_users.TryGetValue(userId, out User? value))
