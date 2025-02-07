@@ -18,7 +18,7 @@ builder.Services.AddPlatform();
 builder.AddPlatformObservability();
 
 builder.Services.AddApplication();
-builder.Services.AddBotExtensions(builder.Configuration);
+builder.Services.AddHttpClientConfigurationService(builder.Configuration);
 builder.Services.AddTelegramBot();
 builder.Services.AddInfrastructurePersistence();
 
