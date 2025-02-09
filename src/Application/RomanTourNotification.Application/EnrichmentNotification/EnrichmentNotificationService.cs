@@ -108,11 +108,12 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
     private async Task LoadDataAsync(DateDto dateDto)
     {
+        Console.WriteLine("Start loading data");
         _loadedData.Clear();
         foreach (ApiSettings apiSetting in _apiSettings)
         {
             List<Request> data = [];
-            var loadData = new LoadData()
+            var loadData = new LoadData
             {
                 Name = apiSetting.Name,
             };

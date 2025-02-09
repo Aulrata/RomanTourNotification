@@ -30,10 +30,10 @@ public class NotificationsBackgroundService : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (!(DateTime.UtcNow.Hour == 17
-                  && DateTime.UtcNow.Minute == 44))
+            if (!(DateTime.UtcNow.Hour == 20
+                  && DateTime.UtcNow.Minute == 33))
             {
-                await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
                 continue;
             }
 
