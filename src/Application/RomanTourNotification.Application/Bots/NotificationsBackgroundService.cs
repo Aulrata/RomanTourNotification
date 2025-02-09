@@ -31,9 +31,7 @@ public class NotificationsBackgroundService : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             if (!(DateTime.UtcNow.Hour == 17
-                  && DateTime.UtcNow.Minute == 30
-                  && DateTime.Today.DayOfWeek is not DayOfWeek.Saturday
-                  && DateTime.Today.DayOfWeek is not DayOfWeek.Sunday))
+                  && DateTime.UtcNow.Minute == 34))
             {
                 await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
                 continue;
