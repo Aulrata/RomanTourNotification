@@ -34,10 +34,7 @@ public class GatewayService : IGatewayService
         using HttpResponseMessage response = await _httpClient.SendAsync(request);
 
         if (response.StatusCode is not HttpStatusCode.OK)
-        {
-            Console.WriteLine($"Request failed with status code {response.StatusCode}");
-            return new ContextDto(string.Empty, response.StatusCode);
-        }
+            throw new HttpRequestException($"Request failed with status code {response.StatusCode}");
 
         string content = await response.Content.ReadAsStringAsync();
 

@@ -1,6 +1,6 @@
 namespace RomanTourNotification.Application.EnrichmentNotification;
 
-public class EnrichmentNotificationMapper
+public static class EnrichmentNotificationMapper
 {
     public static string DaysMapper(DayOfWeek dayOfWeek)
     {

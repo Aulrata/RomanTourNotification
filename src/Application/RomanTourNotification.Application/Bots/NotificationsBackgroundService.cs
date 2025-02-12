@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
 using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
@@ -13,42 +14,54 @@ public class NotificationsBackgroundService : BackgroundService
     private readonly ITelegramBotClient _botClient;
     private readonly IGroupService _groupService;
     private readonly IEnrichmentNotificationService _enrichmentNotificationService;
+    private readonly ILogger<NotificationsBackgroundService> _logger;
 
     public NotificationsBackgroundService(
         ITelegramBotClient botClient,
         IGroupService groupService,
-        IEnrichmentNotificationService enrichmentNotificationService)
+        IEnrichmentNotificationService enrichmentNotificationService,
+        ILogger<NotificationsBackgroundService> logger)
     {
         _botClient = botClient;
         _groupService = groupService;
         _enrichmentNotificationService = enrichmentNotificationService;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Console.WriteLine("Start message");
+        _logger.LogInformation("Starting background notification service");
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (!(DateTime.UtcNow.Hour == 20
-                  && DateTime.UtcNow.Minute == 33))
+            try
             {
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
-                continue;
+                if (!(DateTime.UtcNow.Hour == 10
+                      && DateTime.UtcNow.Minute == 59))
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                    continue;
+                }
+
+                IEnumerable<Group>? groups = await _groupService.GetAllAsync(stoppingToken);
+
+                if (groups is null)
+                {
+                    _logger.LogInformation("No groups found");
+                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                    continue;
+                }
+
+                await SendArrivalNotification(groups.Where(x => x.GroupType == GroupType.Arrival), stoppingToken);
             }
-
-            IEnumerable<Group>? groups = await _groupService.GetAllAsync(stoppingToken);
-
-            if (groups is null)
+            catch (Exception ex)
             {
-                Console.WriteLine("No groups found");
+                _logger.LogError(ex.Message);
+            }
+            finally
+            {
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-                continue;
             }
-
-            await SendArrivalNotification(groups.Where(x => x.GroupType == GroupType.Arrival), stoppingToken);
-
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
 
@@ -56,7 +69,7 @@ public class NotificationsBackgroundService : BackgroundService
     {
         if (groups is null)
         {
-            Console.WriteLine("No groups found for arrival");
+            _logger.LogInformation("No groups found for arrival");
             return;
         }
 
