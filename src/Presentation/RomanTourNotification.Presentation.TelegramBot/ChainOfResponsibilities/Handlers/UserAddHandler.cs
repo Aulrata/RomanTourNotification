@@ -16,6 +16,7 @@ public class UserAddHandler : CommandHandler
 
         await context.BotClient.SendMessage(
             context.User.ChatId,
-            "Выберите пункт настроек");
+            "Выберите пункт настроек",
+            cancellationToken: context.CancellationToken);
     }
 }
