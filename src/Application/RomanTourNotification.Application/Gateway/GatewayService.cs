@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.Gateway;
 using RomanTourNotification.Application.Models.Gateway;
 using System.Net;
@@ -8,10 +9,12 @@ public class GatewayService : IGatewayService
 {
     private const string ClassUrl = "request";
     private readonly HttpClient _httpClient;
+    private readonly ILogger<GatewayService> _logger;
 
-    public GatewayService(HttpClient httpClient)
+    public GatewayService(HttpClient httpClient, ILogger<GatewayService> logger)
     {
         _httpClient = httpClient;
+        _logger = logger;
     }
 
     public async Task<ContextDto> GetArrivalByDateAsync(
@@ -29,6 +32,7 @@ public class GatewayService : IGatewayService
 
     private async Task<ContextDto> SendRequest(HttpMethod method, string url)
     {
+        _logger.LogInformation($"Request to {url}");
         using HttpRequestMessage request = new(method, url);
 
         using HttpResponseMessage response = await _httpClient.SendAsync(request);
@@ -36,6 +40,7 @@ public class GatewayService : IGatewayService
         if (response.StatusCode is not HttpStatusCode.OK)
             throw new HttpRequestException($"Request failed with status code {response.StatusCode}");
 
+        _logger.LogInformation($"Response to {url}");
         string content = await response.Content.ReadAsStringAsync();
 
         return new ContextDto(content, response.StatusCode);

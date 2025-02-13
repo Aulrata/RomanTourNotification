@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RomanTourNotification.Application.Bots;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
@@ -23,8 +24,9 @@ public static class ServiceCollectionExtensions
         {
             IEnumerable<ApiSettings> apiSettings = provider.GetRequiredService<IOptions<List<ApiSettings>>>().Value;
             IGatewayService gateway = provider.GetRequiredService<IGatewayService>();
+            ILogger<EnrichmentNotificationService> logger = provider.GetRequiredService<ILogger<EnrichmentNotificationService>>();
 
-            return new EnrichmentNotificationService(apiSettings, gateway);
+            return new EnrichmentNotificationService(apiSettings, gateway, logger);
         });
         return collection;
     }

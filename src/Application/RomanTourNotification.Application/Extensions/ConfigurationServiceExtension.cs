@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RomanTourNotification.Application.Contracts.Gateway;
 using RomanTourNotification.Application.Gateway;
@@ -36,7 +37,8 @@ public static class ConfigurationServiceExtension
                 ConfigurationService configurationService = provider.GetRequiredService<IOptions<ConfigurationService>>().Value;
 
                 httpClient.BaseAddress = new Uri(configurationService.BaseAddress ?? string.Empty);
-                return new GatewayService(httpClient);
+                ILogger<GatewayService> logger = provider.GetRequiredService<ILogger<GatewayService>>();
+                return new GatewayService(httpClient, logger);
             });
         }
         catch (Exception e)

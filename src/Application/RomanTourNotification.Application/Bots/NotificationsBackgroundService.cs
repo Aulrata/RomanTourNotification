@@ -36,10 +36,10 @@ public class NotificationsBackgroundService : BackgroundService
         {
             try
             {
-                if (!(DateTime.UtcNow.Hour == 10
-                      && DateTime.UtcNow.Minute == 59))
+                if (!(DateTime.UtcNow.Hour == 16
+                      && DateTime.UtcNow.Minute == 08))
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                     continue;
                 }
 
@@ -53,14 +53,11 @@ public class NotificationsBackgroundService : BackgroundService
                 }
 
                 await SendArrivalNotification(groups.Where(x => x.GroupType == GroupType.Arrival), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-            }
-            finally
-            {
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
     }

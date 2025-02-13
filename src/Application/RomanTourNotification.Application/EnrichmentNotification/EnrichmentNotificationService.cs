@@ -1,8 +1,8 @@
+using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
 using RomanTourNotification.Application.Contracts.Gateway;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
-using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -15,12 +15,17 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
     private readonly IGatewayService _gatewayService;
     private readonly JsonSerializerOptions _jsonSerializerOptions;
     private readonly List<LoadData> _loadedData;
+    private readonly ILogger<EnrichmentNotificationService> _logger;
     private DateTime _lastLoadDate;
 
-    public EnrichmentNotificationService(IEnumerable<ApiSettings> apiSettings, IGatewayService gatewayService)
+    public EnrichmentNotificationService(
+        IEnumerable<ApiSettings> apiSettings,
+        IGatewayService gatewayService,
+        ILogger<EnrichmentNotificationService> logger)
     {
         _apiSettings = apiSettings;
         _gatewayService = gatewayService;
+        _logger = logger;
         _jsonSerializerOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -43,20 +48,21 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 continue;
 
             var dateBeginInSomeDays = loadData.Requests.Where(x =>
-                !string.IsNullOrEmpty(x.DateBegin)
-                && DateTime.Parse(x.DateBegin).Date == dateDto.From.AddDays(dateDto.Days)).ToList();
+                    !string.IsNullOrEmpty(x.DateBegin)
+                    && DateTime.Parse(x.DateBegin).Date == dateDto.From.AddDays(dateDto.Days))
+                .ToList();
 
             var dateBeginTomorrow = loadData.Requests.Where(x =>
-                !string.IsNullOrEmpty(x.DateBegin)
-                && DateTime.Parse(x.DateBegin).Date ==
-                dateDto.From.AddDays(1).Date).ToList();
+                    !string.IsNullOrEmpty(x.DateBegin)
+                    && DateTime.Parse(x.DateBegin).Date ==
+                    dateDto.From.AddDays(1).Date)
+                .ToList();
 
             var dateEndTomorrow = loadData.Requests.Where(x =>
-                !string.IsNullOrEmpty(x.DateEnd)
-                && DateTime.Parse(x.DateEnd).Date ==
-                dateDto.From.AddDays(1)).ToList();
-
-            sb.Append($"\n{loadData.Name}\n");
+                    !string.IsNullOrEmpty(x.DateEnd)
+                    && DateTime.Parse(x.DateEnd).Date ==
+                    dateDto.From.AddDays(1))
+                .ToList();
 
             dateBeginInSomeDays = dateBeginInSomeDays.DistinctBy(x => x.Id).ToList();
             dateBeginTomorrow = dateBeginTomorrow.DistinctBy(x => x.Id).ToList();
@@ -66,12 +72,14 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 && dateBeginTomorrow.Count == 0
                 && dateEndTomorrow.Count == 0)
             {
-                sb.AppendLine("Сегодня все спокойно. Приятного дня");
+                continue;
             }
+
+            sb.Append($"\n{loadData.Name}\n");
 
             if (dateBeginInSomeDays.Count > 0)
             {
-                sb.AppendLine("Отправление через 3 дня: ");
+                sb.AppendLine("Документы на вылет: ");
 
                 foreach (Request date in dateBeginInSomeDays)
                 {
@@ -80,20 +88,15 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 }
             }
 
-            if (dateBeginTomorrow.Count > 0)
+            if (dateBeginTomorrow.Count > 0 || dateEndTomorrow.Count > 0)
             {
-                sb.AppendLine("Отправление завтра: ");
+                sb.AppendLine("Авиабилеты: ");
 
                 foreach (Request date in dateBeginTomorrow)
                 {
                     sb.AppendLine(
                         $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}, \nДата вылета: {date.DateBegin}, \nПочта: {date.ClientEmail}\n");
                 }
-            }
-
-            if (dateEndTomorrow.Count > 0)
-            {
-                sb.AppendLine("Прибытие завтра: ");
 
                 foreach (Request date in dateEndTomorrow)
                 {
@@ -125,25 +128,22 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
             {
                 ContextDto context = await _gatewayService.GetArrivalByDateAsync(
                     apiSetting.Api,
-                    dateDto.From.AddMonths(-12),
+                    dateDto.From.AddMonths(-1),
                     dateDto.From,
                     page);
 
-                if (context.StatusCode is not HttpStatusCode.OK)
-                {
-                    // TODO dto
-                    Console.WriteLine($"Status Code: {context.StatusCode}");
-                    return;
-                }
+                _logger.LogInformation("Start deserialize");
 
                 // TODO DeserializeAsync
                 root = JsonSerializer.Deserialize<Root>(
                     context.Stream,
                     _jsonSerializerOptions);
 
+                _logger.LogInformation("End deserialize");
+
                 if (root?.Requests is null)
                 {
-                    Console.WriteLine("Requests is null");
+                    _logger.LogWarning("Requests is null");
                     return;
                 }
 
