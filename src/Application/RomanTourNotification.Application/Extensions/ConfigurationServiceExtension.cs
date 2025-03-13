@@ -33,6 +33,7 @@ public static class ConfigurationServiceExtension
             {
                 IHttpClientFactory httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
                 HttpClient httpClient = httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(300);
 
                 ConfigurationService configurationService = provider.GetRequiredService<IOptions<ConfigurationService>>().Value;
 

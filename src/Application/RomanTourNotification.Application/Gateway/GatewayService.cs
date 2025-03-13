@@ -32,15 +32,15 @@ public class GatewayService : IGatewayService
 
     private async Task<ContextDto> SendRequest(HttpMethod method, string url)
     {
-        _logger.LogInformation($"Request to {url}");
         using HttpRequestMessage request = new(method, url);
 
+        _logger.LogInformation($"Request to {url}");
         using HttpResponseMessage response = await _httpClient.SendAsync(request);
 
+        _logger.LogInformation($"Response to {url}");
         if (response.StatusCode is not HttpStatusCode.OK)
             throw new HttpRequestException($"Request failed with status code {response.StatusCode}");
 
-        _logger.LogInformation($"Response to {url}");
         string content = await response.Content.ReadAsStringAsync();
 
         return new ContextDto(content, response.StatusCode);
