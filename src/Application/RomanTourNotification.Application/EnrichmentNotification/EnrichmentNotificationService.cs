@@ -3,6 +3,7 @@ using RomanTourNotification.Application.Contracts.EnrichmentNotification;
 using RomanTourNotification.Application.Contracts.Gateway;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -40,7 +41,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
             await LoadDataAsync(dateDto);
 
         StringBuilder sb = new();
-        sb.Append($"{EnrichmentNotificationMapper.DaysMapper(dateDto.From.DayOfWeek)}\n");
+        sb.AppendLine($"{EnrichmentNotificationMapper.DaysMapper(dateDto.From.DayOfWeek)}\n");
 
         foreach (LoadData loadData in _loadedData)
         {
@@ -75,7 +76,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 continue;
             }
 
-            sb.Append($"\n{loadData.Name}\n");
+            sb.AppendLine($"{loadData.Name}\n");
 
             if (dateBeginInSomeDays.Count > 0)
             {
@@ -84,7 +85,8 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 foreach (Request date in dateBeginInSomeDays)
                 {
                     sb.AppendLine(
-                        $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}, \nДата вылета: {date.DateBegin}, \nПочта: {date.ClientEmail}\n");
+                        $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
+                        $" \nДата вылета: {date.DateBegin}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
                 }
             }
 
@@ -95,16 +97,21 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 foreach (Request date in dateBeginTomorrow)
                 {
                     sb.AppendLine(
-                        $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}, \nДата вылета: {date.DateBegin}, \nПочта: {date.ClientEmail}\n");
+                        $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
+                        $" \nДата вылета: {date.DateBegin}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
                 }
 
                 foreach (Request date in dateEndTomorrow)
                 {
                     sb.AppendLine(
-                        $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}, \nДата вылета: {date.DateEnd}, \nПочта: {date.ClientEmail}\n");
+                        $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
+                        $" \nДата вылета: {date.DateEnd}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
                 }
             }
         }
+
+        if (sb.Length < 15)
+            sb.AppendLine("Сегодня ничего нет\n");
 
         return sb.ToString();
     }
@@ -126,6 +133,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
             do
             {
+                // TODO Use Stream
                 ContextDto context = await _gatewayService.GetArrivalByDateAsync(
                     apiSetting.Api,
                     dateDto.From.AddMonths(-1),

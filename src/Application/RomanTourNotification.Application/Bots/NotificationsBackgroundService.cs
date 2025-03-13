@@ -36,8 +36,8 @@ public class NotificationsBackgroundService : BackgroundService
         {
             try
             {
-                if (!(DateTime.UtcNow.Hour == 16
-                      && DateTime.UtcNow.Minute == 08))
+                if (!(DateTime.UtcNow.Hour == 11
+                      && DateTime.UtcNow.Minute == 18))
                 {
                     await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                     continue;
@@ -70,19 +70,21 @@ public class NotificationsBackgroundService : BackgroundService
             return;
         }
 
+        DateTime dateTimeToday = DateTime.Today;
+
         var stringBuilder = new StringBuilder();
 
-        var currentDay = new DateDto(DateTime.Today);
+        var currentDay = new DateDto(dateTimeToday);
 
         stringBuilder.Append(await _enrichmentNotificationService.GetArrivalByDateAsync(currentDay, cancellationToken));
 
-        if (DateTime.Today.DayOfWeek is DayOfWeek.Friday)
+        if (dateTimeToday.DayOfWeek is DayOfWeek.Friday)
         {
-            var saturdayDay = new DateDto(DateTime.Today.AddDays(1));
+            var saturdayDay = new DateDto(dateTimeToday.AddDays(1));
             stringBuilder.Append(
                 await _enrichmentNotificationService.GetArrivalByDateAsync(saturdayDay, cancellationToken));
 
-            var sundayDay = new DateDto(DateTime.Today.AddDays(2));
+            var sundayDay = new DateDto(dateTimeToday.AddDays(2));
             stringBuilder.Append(
                 await _enrichmentNotificationService.GetArrivalByDateAsync(sundayDay, cancellationToken));
         }
