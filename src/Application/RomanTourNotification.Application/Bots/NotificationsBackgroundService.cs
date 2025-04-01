@@ -36,8 +36,8 @@ public class NotificationsBackgroundService : BackgroundService
         {
             try
             {
-                if (!(DateTime.UtcNow.Hour == 12
-                      && DateTime.UtcNow.Minute == 42))
+                if (!(DateTime.UtcNow.Hour == 10
+                      && DateTime.UtcNow.Minute == 25))
                 {
                     await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                     continue;
