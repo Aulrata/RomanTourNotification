@@ -30,7 +30,7 @@ public class NotificationsBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        int hour = 11, minute = 27;
+        int hour = 11, minute = 45;
         _logger.LogInformation($"Starting background notification service. With UTC time {hour}:{minute}");
 
         while (!stoppingToken.IsCancellationRequested)

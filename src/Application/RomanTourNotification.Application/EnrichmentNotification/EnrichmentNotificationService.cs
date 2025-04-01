@@ -136,7 +136,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 // TODO Use Stream
                 ContextDto context = await _gatewayService.GetArrivalByDateAsync(
                     apiSetting.Api,
-                    dateDto.From.AddMonths(-1),
+                    dateDto.From.AddYears(-1),
                     dateDto.From,
                     page);
 
