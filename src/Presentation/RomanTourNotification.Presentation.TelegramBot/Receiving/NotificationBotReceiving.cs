@@ -1,6 +1,7 @@
 using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.Models.Groups;
+using RomanTourNotification.Application.Models.Users;
 using RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities;
 using RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities.Handlers;
 using Telegram.Bot;
@@ -50,6 +51,8 @@ public class NotificationBotReceiving
             string text = string.Empty;
             long userId = 0;
             int messageId = 0;
+            string? firstName = string.Empty;
+            string? lastName = string.Empty;
 
             switch (update.Type)
             {
@@ -62,6 +65,8 @@ public class NotificationBotReceiving
 
                     text = callbackQuery.Data ?? string.Empty;
                     userId = callbackQuery.From.Id;
+                    firstName = callbackQuery.From.FirstName;
+                    lastName = callbackQuery.From.LastName;
 
                     if (callbackQuery.Message is not null)
                         messageId = callbackQuery.Message.MessageId;
@@ -77,6 +82,8 @@ public class NotificationBotReceiving
 
                     text = message.Text ?? string.Empty;
                     userId = message.Chat.Id;
+                    firstName = message.Chat.FirstName;
+                    lastName = message.Chat.LastName;
 
                     break;
 
@@ -95,6 +102,8 @@ public class NotificationBotReceiving
                             return;
                     }
 
+                    firstName = chatMember.Chat.FirstName;
+                    lastName = chatMember.Chat.LastName;
                     switch (chatMember.NewChatMember.Status)
                     {
                         case ChatMemberStatus.Left:
@@ -117,7 +126,15 @@ public class NotificationBotReceiving
                 User? user = await _userService.GetByIdAsync(userId, cancellationToken);
 
                 if (user is null)
-                    return;
+                {
+                    var newUser = new User(null, firstName ?? string.Empty, lastName ?? string.Empty, UserRole.Unspecified, userId, DateTime.Now);
+                    long newUserId = await _userService.CreateAsync(newUser, cancellationToken);
+
+                    user = await _userService.GetByIdAsync(newUserId, cancellationToken);
+
+                    if (user is null)
+                        return;
+                }
 
                 value = user;
 
