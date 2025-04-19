@@ -48,5 +48,4 @@ app.UseRouting();
 
 app.UsePlatformObservability();
 
-Console.WriteLine("App started");
 await app.RunAsync();

@@ -26,6 +26,14 @@ public static class ConfigurationServiceExtension
 
             collection.Configure<ConfigurationService>(configuration.GetSection("ConfigurationService"));
 
+            collection.Configure<TimeSettings>(configuration.GetSection("TimeSettings"));
+
+            collection.AddSingleton<TimeSettings>(provide =>
+            {
+                TimeSettings timeSettings = provide.GetRequiredService<IOptions<TimeSettings>>().Value;
+                return new TimeSettings { HoursUtc = timeSettings.HoursUtc, Minutes = timeSettings.Minutes };
+            });
+
             collection.Configure<List<ApiSettings>>(configuration.GetSection("ApiSettings"));
 
             collection.AddHttpClient();

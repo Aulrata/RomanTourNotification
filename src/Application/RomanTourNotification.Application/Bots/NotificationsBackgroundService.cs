@@ -15,30 +15,33 @@ public class NotificationsBackgroundService : BackgroundService
     private readonly IGroupService _groupService;
     private readonly IEnrichmentNotificationService _enrichmentNotificationService;
     private readonly ILogger<NotificationsBackgroundService> _logger;
+    private readonly TimeSettings _timeSettings;
 
     public NotificationsBackgroundService(
         ITelegramBotClient botClient,
         IGroupService groupService,
         IEnrichmentNotificationService enrichmentNotificationService,
-        ILogger<NotificationsBackgroundService> logger)
+        ILogger<NotificationsBackgroundService> logger,
+        TimeSettings timeSettings)
     {
         _botClient = botClient;
         _groupService = groupService;
         _enrichmentNotificationService = enrichmentNotificationService;
         _logger = logger;
+        _timeSettings = timeSettings;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        int hour = 11, minute = 45;
-        _logger.LogInformation($"Starting background notification service. With UTC time {hour}:{minute}");
+        _logger.LogInformation($"Starting background notification service. With UTC time " +
+                               $"{_timeSettings.HoursUtc}:{_timeSettings.Minutes}");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                if (!(DateTime.UtcNow.Hour == hour
-                      && DateTime.UtcNow.Minute == minute))
+                if (!(DateTime.UtcNow.Hour == _timeSettings.HoursUtc
+                      && DateTime.UtcNow.Minute == _timeSettings.Minutes))
                 {
                     await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                     continue;
