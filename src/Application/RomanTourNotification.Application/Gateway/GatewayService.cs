@@ -34,12 +34,13 @@ public class GatewayService : IGatewayService
     {
         using HttpRequestMessage request = new(method, url);
 
-        _logger.LogInformation($"Request to {url}");
         using HttpResponseMessage response = await _httpClient.SendAsync(request);
 
-        _logger.LogInformation($"Response to {url}");
         if (response.StatusCode is not HttpStatusCode.OK)
+        {
+            _logger.LogError($"Request failed with status code {response.StatusCode}");
             throw new HttpRequestException($"Request failed with status code {response.StatusCode}");
+        }
 
         string content = await response.Content.ReadAsStringAsync();
 

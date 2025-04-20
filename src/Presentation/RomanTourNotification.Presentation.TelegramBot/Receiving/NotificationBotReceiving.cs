@@ -17,6 +17,8 @@ public class NotificationBotReceiving
     private readonly ITelegramBotClient _botClient;
     private readonly IUserService _userService;
     private readonly IGroupService _groupService;
+
+    // TODO Учесть усдалеие пользователей
     private readonly Dictionary<long, User> _users;
 
     public NotificationBotReceiving(
