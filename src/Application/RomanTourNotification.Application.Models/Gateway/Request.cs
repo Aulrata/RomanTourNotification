@@ -28,7 +28,19 @@ public class Request
     [JsonPropertyName("client_email")]
     public string ClientEmail { get; private set; }
 
-    public Request(int id, string dateBegin, string supplierName, string clientLastName, string clientFirstName, string clientMiddleName, string clientEmail, string dateEnd)
+    [JsonPropertyName("status_id")]
+    public string StatusId { get; private set; }
+
+    public Request(
+        int id,
+        string dateBegin,
+        string supplierName,
+        string clientLastName,
+        string clientFirstName,
+        string clientMiddleName,
+        string clientEmail,
+        string dateEnd,
+        string statusId)
     {
         Id = id;
         DateBegin = dateBegin;
@@ -38,5 +50,6 @@ public class Request
         ClientMiddleName = clientMiddleName;
         ClientEmail = clientEmail;
         DateEnd = dateEnd;
+        StatusId = statusId;
     }
 }

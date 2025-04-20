@@ -48,6 +48,8 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
             if (loadData.Requests is null)
                 continue;
 
+            loadData.Requests = loadData.Requests.Where(x => int.Parse(x.StatusId) != (int)RequestStatus.Cancelled);
+
             var dateBeginInSomeDays = loadData.Requests.Where(x =>
                     !string.IsNullOrEmpty(x.DateBegin)
                     && DateTime.Parse(x.DateBegin).Date == dateDto.From.AddDays(dateDto.Days))
@@ -140,14 +142,10 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                     dateDto.From,
                     page);
 
-                _logger.LogInformation("Start deserialize");
-
                 // TODO DeserializeAsync
                 root = JsonSerializer.Deserialize<Root>(
                     context.Stream,
                     _jsonSerializerOptions);
-
-                _logger.LogInformation("End deserialize");
 
                 if (root?.Requests is null)
                 {
