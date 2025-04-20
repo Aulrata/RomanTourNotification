@@ -47,12 +47,11 @@ public class NotificationsBackgroundService : BackgroundService
                     continue;
                 }
 
-                if (DateTime.Today.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
-                    continue;
-                }
-
+                // if (DateTime.Today.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+                // {
+                //     await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                //     continue;
+                // }
                 IEnumerable<Group>? groups = await _groupService.GetAllAsync(stoppingToken);
 
                 if (groups is null)
