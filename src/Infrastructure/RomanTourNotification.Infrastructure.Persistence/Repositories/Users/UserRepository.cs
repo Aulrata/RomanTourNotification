@@ -72,4 +72,31 @@ public class UserRepository : IUserRepository
 
         return null;
     }
+
+    public async Task<IEnumerable<User>?> GetAllUsersAsync(CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           SELECT user_id, first_name, last_name, user_role, created_at
+                           FROM users
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection);
+
+        await using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        var users = new List<User>();
+        if (await reader.ReadAsync(cancellationToken))
+        {
+            users.Add(new User(
+                reader.GetInt64(reader.GetOrdinal("user_id")),
+                reader.GetString(reader.GetOrdinal("first_name")),
+                reader.GetString(reader.GetOrdinal("last_name")),
+                reader.GetFieldValue<UserRole>(reader.GetOrdinal("user_role")),
+                reader.GetInt64(reader.GetOrdinal("chat_id")),
+                reader.GetDateTime(reader.GetOrdinal("created_at"))));
+        }
+
+        return users;
+    }
 }

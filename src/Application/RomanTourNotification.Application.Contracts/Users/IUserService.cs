@@ -7,4 +7,6 @@ public interface IUserService
     public Task<long> CreateAsync(User user, CancellationToken cancellationToken);
 
     public Task<User?> GetByIdAsync(long userId, CancellationToken cancellationToken);
+
+    public Task<IEnumerable<User>?> GetAllAsync(CancellationToken cancellationToken);
 }

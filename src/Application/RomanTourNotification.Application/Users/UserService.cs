@@ -42,4 +42,11 @@ public class UserService : IUserService
         User? user = await _userRepository.GetUserByChatIdAsync(userId, cancellationToken);
         return user;
     }
+
+    public async Task<IEnumerable<User>?> GetAllAsync(CancellationToken cancellationToken)
+    {
+        IEnumerable<User>? users = await _userRepository.GetAllUsersAsync(cancellationToken);
+
+        return users;
+    }
 }
