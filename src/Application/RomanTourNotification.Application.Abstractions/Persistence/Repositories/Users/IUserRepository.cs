@@ -8,7 +8,7 @@ public interface IUserRepository
 
     public Task<User?> GetUserByChatIdAsync(long chatId, CancellationToken cancellationToken);
 
-    public Task<IEnumerable<User>?> GetAllUsersAsync(CancellationToken cancellationToken);
+    public IAsyncEnumerable<User> GetAllUsersAsync(CancellationToken cancellationToken);
 
     public Task UpdateUserRoleAsync(long chatId, UserRole role, CancellationToken cancellationToken);
 }

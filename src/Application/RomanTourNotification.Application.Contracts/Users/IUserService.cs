@@ -8,7 +8,7 @@ public interface IUserService
 
     public Task<User?> GetByChatIdAsync(long userId, CancellationToken cancellationToken);
 
-    public Task<IEnumerable<User>?> GetAllAsync(CancellationToken cancellationToken);
+    public IAsyncEnumerable<User> GetAllAsync(CancellationToken cancellationToken);
 
     public Task UpdateUserRoleAsync(long chatId, UserRole role, CancellationToken cancellationToken);
 }
