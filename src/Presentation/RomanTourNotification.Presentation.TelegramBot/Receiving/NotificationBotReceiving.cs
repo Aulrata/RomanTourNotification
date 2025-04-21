@@ -98,7 +98,7 @@ public class NotificationBotReceiving
 
                     if (!_users.ContainsKey(id))
                     {
-                        User? user = await _userService.GetByIdAsync(id, cancellationToken);
+                        User? user = await _userService.GetByChatIdAsync(id, cancellationToken);
 
                         if (user is null)
                             return;
@@ -125,14 +125,14 @@ public class NotificationBotReceiving
 
             if (!_users.TryGetValue(userId, out User? value))
             {
-                User? user = await _userService.GetByIdAsync(userId, cancellationToken);
+                User? user = await _userService.GetByChatIdAsync(userId, cancellationToken);
 
                 if (user is null)
                 {
                     var newUser = new User(null, firstName ?? string.Empty, lastName ?? string.Empty, UserRole.Unspecified, userId, DateTime.Now);
                     long newUserId = await _userService.CreateAsync(newUser, cancellationToken);
 
-                    user = await _userService.GetByIdAsync(newUserId, cancellationToken);
+                    user = await _userService.GetByChatIdAsync(newUserId, cancellationToken);
 
                     if (user is null)
                         return;
@@ -144,7 +144,7 @@ public class NotificationBotReceiving
             }
 
             var iterator = new Iterator(text);
-            var context = new HandlerContext(value, iterator, _botClient, cancellationToken, messageId);
+            var context = new HandlerContext(value, iterator, _botClient, cancellationToken, _userService, messageId);
             var startHandler = new StartHandler();
             var userHandler = new UserHandler();
             await startHandler.SetNext(userHandler);

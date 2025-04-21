@@ -6,7 +6,9 @@ public interface IUserService
 {
     public Task<long> CreateAsync(User user, CancellationToken cancellationToken);
 
-    public Task<User?> GetByIdAsync(long userId, CancellationToken cancellationToken);
+    public Task<User?> GetByChatIdAsync(long userId, CancellationToken cancellationToken);
 
     public Task<IEnumerable<User>?> GetAllAsync(CancellationToken cancellationToken);
+
+    public Task UpdateUserRoleAsync(long chatId, UserRole role, CancellationToken cancellationToken);
 }

@@ -37,7 +37,7 @@ public class UserService : IUserService
         return userId;
     }
 
-    public async Task<User?> GetByIdAsync(long userId, CancellationToken cancellationToken)
+    public async Task<User?> GetByChatIdAsync(long userId, CancellationToken cancellationToken)
     {
         User? user = await _userRepository.GetUserByChatIdAsync(userId, cancellationToken);
         return user;
@@ -48,5 +48,10 @@ public class UserService : IUserService
         IEnumerable<User>? users = await _userRepository.GetAllUsersAsync(cancellationToken);
 
         return users;
+    }
+
+    public async Task UpdateUserRoleAsync(long chatId, UserRole role, CancellationToken cancellationToken)
+    {
+        await _userRepository.UpdateUserRoleAsync(chatId, role, cancellationToken);
     }
 }

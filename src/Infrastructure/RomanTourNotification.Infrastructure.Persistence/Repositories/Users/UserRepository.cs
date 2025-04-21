@@ -76,7 +76,7 @@ public class UserRepository : IUserRepository
     public async Task<IEnumerable<User>?> GetAllUsersAsync(CancellationToken cancellationToken)
     {
         const string sql = """
-                           SELECT user_id, first_name, last_name, user_role, created_at
+                           SELECT user_id, first_name, last_name, user_role, chat_id, created_at
                            FROM users
                            """;
 
@@ -98,5 +98,26 @@ public class UserRepository : IUserRepository
         }
 
         return users;
+    }
+
+    public async Task UpdateUserRoleAsync(long chatId, UserRole role, CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           UPDATE users
+                           SET user_role = :role
+                           WHERE chat_id = :chat_id
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter("role", role),
+                new NpgsqlParameter("chat_id", chatId),
+            },
+        };
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }
