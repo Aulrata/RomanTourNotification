@@ -6,6 +6,8 @@ public class Iterator
 
     public int CountOfCommand { get; private set; }
 
+    public long ObjectId { get; set; }
+
     private string[] Commands { get; }
 
     private int CurrentPosition { get; set; } = 0;

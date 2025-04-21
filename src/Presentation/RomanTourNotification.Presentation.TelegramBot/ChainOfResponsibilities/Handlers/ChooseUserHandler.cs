@@ -1,3 +1,4 @@
+using RomanTourNotification.Application.Models.Users;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -16,31 +17,52 @@ public class ChooseUserHandler : CommandHandler
             return;
         }
 
-        var keyboard = new InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton.WithCallbackData("Назад", "users"),
-            ]
-        ]);
-
-        if (context.MessageId != 0)
+        if (context.Iterator.CountOfCommand > 2)
         {
-            if (context.User.Id is null)
-                return;
+            context.Iterator.MoveNext();
 
-            await context.BotClient.EditMessageReplyMarkup(
-                chatId: context.User.ChatId,
-                messageId: context.MessageId,
-                keyboard,
-                cancellationToken: context.CancellationToken);
+            var showUserHandler = new ShowUserHandler();
+
+            await showUserHandler.Handle(context);
         }
         else
         {
-            await context.BotClient.SendMessage(
-                context.User.ChatId,
-                "Выберите пункт настроек",
-                parseMode: ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: context.CancellationToken);
+            IAsyncEnumerable<User> users = context.UserService.GetAllAsync(context.CancellationToken);
+
+            var keyboardButtons = new List<InlineKeyboardButton[]>();
+            await foreach (User? user in users.WithCancellation(context.CancellationToken))
+            {
+                var button = InlineKeyboardButton.WithCallbackData(
+                    $"{user.FirstName} {user.LastName}",
+                    $"users choose_user show_user {user.ChatId}");
+                keyboardButtons.Add([button]);
+            }
+
+            keyboardButtons.Add([InlineKeyboardButton.WithCallbackData("Назад", "users")]);
+
+            var keyboard = new InlineKeyboardMarkup(keyboardButtons);
+
+            if (context.MessageId != 0)
+            {
+                if (context.User.Id is null)
+                    return;
+
+                await context.BotClient.EditMessageText(
+                    chatId: context.User.ChatId,
+                    messageId: context.MessageId,
+                    text: "Выберите пользователя",
+                    replyMarkup: keyboard,
+                    cancellationToken: context.CancellationToken);
+            }
+            else
+            {
+                await context.BotClient.SendMessage(
+                    chatId: context.User.ChatId,
+                    text: "Выберите пользователя",
+                    parseMode: ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: context.CancellationToken);
+            }
         }
     }
 }
