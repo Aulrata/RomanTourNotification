@@ -143,11 +143,12 @@ public class NotificationBotReceiving
                 _users.Add(userId, value);
             }
 
-            var handler = new HandlerContext(value, text, _botClient, cancellationToken, messageId);
+            var iterator = new Iterator(text);
+            var context = new HandlerContext(value, iterator, _botClient, cancellationToken, messageId);
             var startHandler = new StartHandler();
             var userHandler = new UserHandler();
             await startHandler.SetNext(userHandler);
-            await startHandler.Handle(handler);
+            await startHandler.Handle(context);
         }
         catch (Exception ex)
         {

@@ -10,7 +10,7 @@ public class UserHandler : CommandHandler
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (context.Message != "/users")
+        if (context.Iterator.CurrentWord != "users")
         {
             await base.Handle(context);
             return;
@@ -18,30 +18,45 @@ public class UserHandler : CommandHandler
 
         var keyboard = new InlineKeyboardMarkup([
             [
-                InlineKeyboardButton.WithCallbackData("Добавить пользователя", "/user_add"),
-                InlineKeyboardButton.WithCallbackData("Изменить роль пользователю", "/user_change_role")
+                InlineKeyboardButton.WithCallbackData("Добавить пользователя", "users add_user"),
+                InlineKeyboardButton.WithCallbackData("Выбрать пользователя", "users choose_user")
+            ],
+            [
+                InlineKeyboardButton.WithCallbackData("Назад", "/start")
             ]
         ]);
 
-        if (context.MessageId != 0)
+        if (context.Iterator.CountOfCommand > 1)
         {
-            if (context.User.Id is null)
-                return;
+            context.Iterator.MoveNext();
 
-            await context.BotClient.EditMessageReplyMarkup(
-                chatId: context.User.ChatId,
-                messageId: context.MessageId,
-                keyboard,
-                cancellationToken: context.CancellationToken);
+            var userAddHandler = new UserAddHandler();
+            var chooseUserHandler = new ChooseUserHandler();
+            await userAddHandler.SetNext(chooseUserHandler);
+            await userAddHandler.Handle(context);
         }
         else
         {
-            await context.BotClient.SendMessage(
-                context.User.ChatId,
-                "Выберите пункт настроек",
-                parseMode: ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: context.CancellationToken);
+            if (context.MessageId != 0)
+            {
+                if (context.User.Id is null)
+                    return;
+
+                await context.BotClient.EditMessageReplyMarkup(
+                    chatId: context.User.ChatId,
+                    messageId: context.MessageId,
+                    keyboard,
+                    cancellationToken: context.CancellationToken);
+            }
+            else
+            {
+                await context.BotClient.SendMessage(
+                    context.User.ChatId,
+                    "Выберите пункт настроек",
+                    parseMode: ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: context.CancellationToken);
+            }
         }
     }
 }

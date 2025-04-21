@@ -5,7 +5,7 @@ namespace RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities
 
 public record HandlerContext(
     User User,
-    string Message,
+    Iterator Iterator,
     ITelegramBotClient BotClient,
     CancellationToken CancellationToken,
     int MessageId = 0);
