@@ -2,6 +2,7 @@ using Npgsql;
 using RomanTourNotification.Application.Abstractions.Persistence.Repositories.Users;
 using RomanTourNotification.Application.Models.Users;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 
 namespace RomanTourNotification.Infrastructure.Persistence.Repositories.Users;
 
@@ -71,5 +72,50 @@ public class UserRepository : IUserRepository
         }
 
         return null;
+    }
+
+    public async IAsyncEnumerable<User> GetAllUsersAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           SELECT user_id, first_name, last_name, user_role, chat_id, created_at
+                           FROM users
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection);
+
+        await using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            yield return new User(
+                reader.GetInt64(reader.GetOrdinal("user_id")),
+                reader.GetString(reader.GetOrdinal("first_name")),
+                reader.GetString(reader.GetOrdinal("last_name")),
+                reader.GetFieldValue<UserRole>(reader.GetOrdinal("user_role")),
+                reader.GetInt64(reader.GetOrdinal("chat_id")),
+                reader.GetDateTime(reader.GetOrdinal("created_at")));
+        }
+    }
+
+    public async Task UpdateUserRoleAsync(long chatId, UserRole role, CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           UPDATE users
+                           SET user_role = :role
+                           WHERE chat_id = :chat_id
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter("role", role),
+                new NpgsqlParameter("chat_id", chatId),
+            },
+        };
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }

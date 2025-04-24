@@ -14,7 +14,7 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<string> CreateAsync(User user, CancellationToken cancellationToken)
+    public async Task<long> CreateAsync(User user, CancellationToken cancellationToken)
     {
         using var transaction = new TransactionScope(
             TransactionScopeOption.Required,
@@ -23,21 +23,33 @@ public class UserService : IUserService
 
         User? oldUser = await _userRepository.GetUserByChatIdAsync(user.ChatId, cancellationToken);
 
-        Console.WriteLine("User created");
-
+        // Доабвить логгер "User already exists.";
         if (oldUser is not null)
-            return "User already exists.";
+            return oldUser.Id ?? 0;
 
         long userId = await _userRepository.CreateUserAsync(user, cancellationToken);
 
+        // TODO Logger
+        Console.WriteLine("User created successfully.");
+
         transaction.Complete();
 
-        return "User created successfully.";
+        return userId;
     }
 
-    public async Task<User?> GetByIdAsync(long userId, CancellationToken cancellationToken)
+    public async Task<User?> GetByChatIdAsync(long userId, CancellationToken cancellationToken)
     {
         User? user = await _userRepository.GetUserByChatIdAsync(userId, cancellationToken);
         return user;
+    }
+
+    public IAsyncEnumerable<User> GetAllAsync(CancellationToken cancellationToken)
+    {
+        return _userRepository.GetAllUsersAsync(cancellationToken);
+    }
+
+    public async Task UpdateUserRoleAsync(long chatId, UserRole role, CancellationToken cancellationToken)
+    {
+        await _userRepository.UpdateUserRoleAsync(chatId, role, cancellationToken);
     }
 }

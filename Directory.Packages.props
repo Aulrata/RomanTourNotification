@@ -13,6 +13,7 @@
     <PackageVersion Include="Itmo.Dev.Platform.Observability" Version="1.4.234" />
     <PackageVersion Include="Itmo.Dev.Platform.Persistence.Postgres" Version="1.2.245" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
     <PackageVersion Include="SourceKit.Generators.Builder" Version="1.2.45" />
     <PackageVersion Include="SourceKit.Analyzers.Collections" Version="1.0.45" />

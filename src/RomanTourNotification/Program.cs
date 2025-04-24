@@ -18,9 +18,12 @@ builder.Services.AddPlatform();
 builder.AddPlatformObservability();
 
 builder.Services.AddApplication();
-builder.Services.AddBotExtensions(builder.Configuration);
+builder.Services.AddHttpClientConfigurationService(builder.Configuration);
 builder.Services.AddTelegramBot();
 builder.Services.AddInfrastructurePersistence();
+
+builder.Services.AddHostedServices();
+builder.Services.AddHostedApplicationServices();
 
 builder.Services.AddUtcDateTimeProvider();
 
@@ -34,17 +37,15 @@ try
 catch (Exception ex)
 {
     Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine($"Error: {ex.Message}");
+    Console.WriteLine($"Program Error: {ex.Message}");
     Console.ForegroundColor = ConsoleColor.Gray;
 }
 
 using var cts = new CancellationTokenSource();
 
 if (notificationBot is not null) await notificationBot.StartAsync(cts.Token);
-
 app.UseRouting();
 
 app.UsePlatformObservability();
 
-// await notificationBot.StartAsync(cts.Token);
 await app.RunAsync();

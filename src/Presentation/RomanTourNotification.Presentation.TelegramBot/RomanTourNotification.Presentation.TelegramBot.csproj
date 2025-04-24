@@ -17,6 +17,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Application\RomanTourNotification.Application.Contracts\RomanTourNotification.Application.Contracts.csproj" />
+      <ProjectReference Include="..\..\Application\RomanTourNotification.Application\RomanTourNotification.Application.csproj" />
     </ItemGroup>
 
 </Project>

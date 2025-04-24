@@ -5,6 +5,7 @@
 .idea
 .DS_Store
 
+/deploy
 # User-specific files
 *.rsuser
 *.suo

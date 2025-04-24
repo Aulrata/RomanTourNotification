@@ -10,7 +10,7 @@ public class StartHandler : CommandHandler
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (context.Message != "/start")
+        if (context.Iterator.CurrentWord != "/start")
         {
             await base.Handle(context);
             return;
@@ -19,18 +19,29 @@ public class StartHandler : CommandHandler
         var keyboard = new InlineKeyboardMarkup([
             [
                 InlineKeyboardButton.WithCallbackData("Пользователи", "users"),
-                InlineKeyboardButton.WithCallbackData("Обо мне", "about_me")
-            ],
-            [
                 InlineKeyboardButton.WithCallbackData("Группы", "groups"),
-                InlineKeyboardButton.WithCallbackData("Тест", "nothing")
             ]
         ]);
 
-        await context.BotClient.SendMessage(
-            context.User.ChatId,
-            "Выберите пункт настроек",
-            parseMode: ParseMode.Markdown,
-            replyMarkup: keyboard);
+        if (context.MessageId != 0)
+        {
+            if (context.User.Id is null)
+                return;
+
+            await context.BotClient.EditMessageReplyMarkup(
+                chatId: context.User.ChatId,
+                messageId: context.MessageId,
+                keyboard,
+                cancellationToken: context.CancellationToken);
+        }
+        else
+        {
+            await context.BotClient.SendMessage(
+                context.User.ChatId,
+                "Выберите пункт настроек",
+                parseMode: ParseMode.Markdown,
+                replyMarkup: keyboard,
+                cancellationToken: context.CancellationToken);
+        }
     }
 }
