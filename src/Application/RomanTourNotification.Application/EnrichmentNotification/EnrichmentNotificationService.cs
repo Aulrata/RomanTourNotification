@@ -42,7 +42,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
             await LoadAllRequestsAsync(dateDto);
 
         StringBuilder sb = new();
-        sb.AppendLine($"{EnrichmentNotificationMapper.DaysMapper(dateDto.From.DayOfWeek)}\n");
+        sb.AppendLine($"{EnrichmentNotificationMapper.DaysMapper(dateDto.From.DayOfWeek)}\n ");
 
         foreach (LoadData loadData in _loadedData)
         {
