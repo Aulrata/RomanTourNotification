@@ -4,8 +4,11 @@ namespace RomanTourNotification.Application.Models.Gateway;
 
 public class Request
 {
-    [JsonPropertyName("id_system")]
+    [JsonPropertyName("id")]
     public int Id { get; private set; }
+
+    [JsonPropertyName("id_system")]
+    public int IdSystem { get; private set; }
 
     [JsonPropertyName("date_begin")]
     public string DateBegin { get; private set; }
@@ -31,8 +34,12 @@ public class Request
     [JsonPropertyName("status_id")]
     public string StatusId { get; private set; }
 
+    [JsonPropertyName("services")]
+    public IEnumerable<InformationServices> Services { get; init; }
+
     public Request(
         int id,
+        int idSystem,
         string dateBegin,
         string supplierName,
         string clientLastName,
@@ -40,9 +47,11 @@ public class Request
         string clientMiddleName,
         string clientEmail,
         string dateEnd,
-        string statusId)
+        string statusId,
+        IEnumerable<InformationServices> services)
     {
         Id = id;
+        IdSystem = idSystem;
         DateBegin = dateBegin;
         SupplierName = supplierName;
         ClientLastName = clientLastName;
@@ -51,5 +60,6 @@ public class Request
         ClientEmail = clientEmail;
         DateEnd = dateEnd;
         StatusId = statusId;
+        Services = services;
     }
 }

@@ -68,6 +68,7 @@ public class NotificationsBackgroundService : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
     }

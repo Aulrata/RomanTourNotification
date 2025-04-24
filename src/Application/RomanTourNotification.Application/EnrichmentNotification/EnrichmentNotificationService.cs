@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
 using RomanTourNotification.Application.Contracts.Gateway;
+using RomanTourNotification.Application.Extensions;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
 using System.Net;
@@ -38,7 +39,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
     public async Task<string> GetArrivalByDateAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
         if (_lastLoadDate != DateTime.Today)
-            await LoadDataAsync(dateDto);
+            await LoadAllRequestsAsync(dateDto);
 
         StringBuilder sb = new();
         sb.AppendLine($"{EnrichmentNotificationMapper.DaysMapper(dateDto.From.DayOfWeek)}\n");
@@ -48,28 +49,15 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
             if (loadData.Requests is null)
                 continue;
 
-            loadData.Requests = loadData.Requests.Where(x => int.Parse(x.StatusId) != (int)RequestStatus.Cancelled);
-
-            var dateBeginInSomeDays = loadData.Requests.Where(x =>
-                    !string.IsNullOrEmpty(x.DateBegin)
-                    && DateTime.Parse(x.DateBegin).Date == dateDto.From.AddDays(dateDto.Days))
+            var dataRequests = loadData.Requests
+                .Where(x =>
+                    int.TryParse(x.StatusId, out int value) &&
+                    value != (int)RequestStatus.Cancelled)
                 .ToList();
 
-            var dateBeginTomorrow = loadData.Requests.Where(x =>
-                    !string.IsNullOrEmpty(x.DateBegin)
-                    && DateTime.Parse(x.DateBegin).Date ==
-                    dateDto.From.AddDays(1).Date)
-                .ToList();
-
-            var dateEndTomorrow = loadData.Requests.Where(x =>
-                    !string.IsNullOrEmpty(x.DateEnd)
-                    && DateTime.Parse(x.DateEnd).Date ==
-                    dateDto.From.AddDays(1))
-                .ToList();
-
-            dateBeginInSomeDays = dateBeginInSomeDays.DistinctBy(x => x.Id).ToList();
-            dateBeginTomorrow = dateBeginTomorrow.DistinctBy(x => x.Id).ToList();
-            dateEndTomorrow = dateEndTomorrow.DistinctBy(x => x.Id).ToList();
+            List<Request> dateBeginInSomeDays = GetDateBeginInSomeDays(dataRequests, dateDto);
+            List<Request> dateBeginTomorrow = GetBeginTomorrow(dataRequests, dateDto);
+            List<Request> dateEndTomorrow = GetEndTomorrow(dataRequests, dateDto);
 
             if (dateBeginInSomeDays.Count == 0
                 && dateBeginTomorrow.Count == 0
@@ -80,36 +68,9 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
             sb.AppendLine($"{loadData.Name}\n");
 
-            if (dateBeginInSomeDays.Count > 0)
-            {
-                sb.AppendLine("Документы на вылет: ");
+            FillDocuments(sb, dateBeginInSomeDays);
 
-                foreach (Request date in dateBeginInSomeDays)
-                {
-                    sb.AppendLine(
-                        $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
-                        $" \nДата вылета: {date.DateBegin}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
-                }
-            }
-
-            if (dateBeginTomorrow.Count > 0 || dateEndTomorrow.Count > 0)
-            {
-                sb.AppendLine("Авиабилеты: ");
-
-                foreach (Request date in dateBeginTomorrow)
-                {
-                    sb.AppendLine(
-                        $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
-                        $" \nДата вылета: {date.DateBegin}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
-                }
-
-                foreach (Request date in dateEndTomorrow)
-                {
-                    sb.AppendLine(
-                        $"Id: {date.Id}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
-                        $" \nДата вылета: {date.DateEnd}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
-                }
-            }
+            FillTickets(sb, dateBeginTomorrow, dateEndTomorrow);
         }
 
         if (sb.Length < 15)
@@ -118,9 +79,123 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         return sb.ToString();
     }
 
-    private async Task LoadDataAsync(DateDto dateDto)
+    private void FillDocuments(StringBuilder sb, List<Request> requests)
     {
-        Console.WriteLine("Start loading data");
+        if (requests.Count <= 0) return;
+
+        sb.AppendLine("Документы на вылет: ");
+
+        foreach (Request date in requests)
+        {
+            InformationServices? service = date.Services?
+                .Where(s => s.InformationServiceType == InformationServiceType.AirTicket).FirstOrDefault();
+
+            string type = (service?.Flights?.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified).GetDescription();
+
+            sb.AppendLine(
+                $"Id: {date.IdSystem}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
+                $" \nДата вылета: {date.DateBegin}, \nТип самолета: {type}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
+        }
+    }
+
+    private void FillTickets(StringBuilder sb, List<Request> dateBeginTomorrow, List<Request> dateEndTomorrow)
+    {
+        if (dateBeginTomorrow.Count <= 0 && dateEndTomorrow.Count <= 0) return;
+
+        sb.AppendLine("Авиабилеты: ");
+
+        FillAirTicketsTomorrowBegin(sb, dateBeginTomorrow);
+
+        FillAirTicketsTomorrowEnd(sb, dateEndTomorrow);
+    }
+
+    private void FillAirTicketsTomorrowBegin(StringBuilder sb, List<Request> requests)
+    {
+        foreach (Request date in requests)
+        {
+            InformationServices? service = date.Services?
+                .Where(s => s.InformationServiceType == InformationServiceType.AirTicket).FirstOrDefault();
+
+            string type = (service?.Flights?.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified).GetDescription();
+
+            sb.AppendLine(
+                $"Id: {date.IdSystem}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
+                $" \nДата вылета: {date.DateBegin}, \nТип самолета: {type}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
+        }
+    }
+
+    private void FillAirTicketsTomorrowEnd(StringBuilder sb, List<Request> requests)
+    {
+        foreach (Request date in requests)
+        {
+            InformationServices? service = date.Services?
+                .Where(s => s.InformationServiceType == InformationServiceType.AirTicket).FirstOrDefault();
+
+            string type = (service?.Flights?.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified).GetDescription();
+
+            sb.AppendLine(
+                $"Id: {date.IdSystem}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
+                $" \nДата вылета: {date.DateEnd}, \nТип самолета: {type}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
+        }
+    }
+
+    private List<Request> GetEndTomorrow(IEnumerable<Request> requests, DateDto dateDto)
+    {
+        var results = requests
+            .Where(r =>
+                r.Services?
+                    .Any(s =>
+                        s.InformationServiceType == InformationServiceType.AirTicket &&
+                        s.Flights?.Any(f => f.FlightsType == FlightsType.Charter) == true &&
+                        DateTime.TryParse(
+                            s.Flights?
+                            .Where(f1 => s.Flights?
+                                .Any(f2 =>
+                                    f1 != f2 &&
+                                    DateTime.TryParse(f1.DateBegin, out DateTime value1) &&
+                                    DateTime.TryParse(f2.DateBegin, out DateTime value2) &&
+                                    value1 > value2.AddDays(2)) == true)
+                            .MinBy(f => DateTime.Parse(f.DateBegin ?? "2000-01-01"))?.DateBegin,
+                            out DateTime value) &&
+                        value == dateDto.From.AddDays(1)) == true)
+            .DistinctBy(r => r.IdSystem)
+            .ToList();
+
+        return results;
+    }
+
+    private List<Request> GetDateBeginInSomeDays(List<Request> requests, DateDto dateDto)
+    {
+        IEnumerable<Request> r1 = requests
+            .Where(r =>
+                !string.IsNullOrEmpty(r.DateBegin) &&
+                DateTime.TryParse(r.DateBegin, out DateTime value) &&
+                value.Date == dateDto.From.AddDays(dateDto.Days).Date);
+        var r2 = r1
+            .DistinctBy(r => r.IdSystem)
+            .ToList();
+        return r2;
+    }
+
+    private List<Request> GetBeginTomorrow(List<Request> requests, DateDto dateDto)
+    {
+        return requests
+            .Where(r =>
+                !string.IsNullOrEmpty(r.DateBegin) &&
+                DateTime.TryParse(r.DateBegin, out DateTime value) &&
+                value.Date == dateDto.From.AddDays(1).Date &&
+                r.Services?
+                    .Any(s =>
+                        s.InformationServiceType == InformationServiceType.AirTicket &&
+                        s.Flights?
+                            .Any(f => f.FlightsType == FlightsType.Charter) == true) == true)
+            .DistinctBy(r => r.IdSystem)
+            .ToList();
+    }
+
+    private async Task LoadAllRequestsAsync(DateDto dateDto)
+    {
+        Console.WriteLine("Start loading all requests data");
         _loadedData.Clear();
         foreach (ApiSettings apiSetting in _apiSettings)
         {
@@ -143,9 +218,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                     page);
 
                 // TODO DeserializeAsync
-                root = JsonSerializer.Deserialize<Root>(
-                    context.Stream,
-                    _jsonSerializerOptions);
+                root = JsonSerializer.Deserialize<Root>(context.Stream, _jsonSerializerOptions);
 
                 if (root?.Requests is null)
                 {
