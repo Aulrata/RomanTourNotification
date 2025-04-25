@@ -20,7 +20,7 @@ public class InformationServices
     public int ServiceTypeId { get; private set; }
 
     [JsonPropertyName("flights")]
-    public IEnumerable<Flights>? Flights { get; init; }
+    public IEnumerable<Flights> Flights { get; init; }
 
     public InformationServiceType? InformationServiceType { get; init; }
 
@@ -29,13 +29,15 @@ public class InformationServices
         int requestId,
         string dateBegin,
         string dateEnd,
-        int serviceTypeId)
+        int serviceTypeId,
+        IEnumerable<Flights> flights)
     {
         Id = id;
         RequestId = requestId;
         DateBegin = dateBegin;
         DateEnd = dateEnd;
         ServiceTypeId = serviceTypeId;
+        Flights = flights;
         InformationServiceType = (InformationServiceType)serviceTypeId;
     }
 }

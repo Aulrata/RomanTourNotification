@@ -50,14 +50,12 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 continue;
 
             var dataRequests = loadData.Requests
-                .Where(x =>
-                    int.TryParse(x.StatusId, out int value) &&
-                    value != (int)RequestStatus.Cancelled)
+                .Where(x => x.Status is not RequestStatus.Cancelled)
                 .ToList();
 
-            List<Request> dateBeginInSomeDays = GetDateBeginInSomeDays(dataRequests, dateDto);
-            List<Request> dateBeginTomorrow = GetBeginTomorrow(dataRequests, dateDto);
-            List<Request> dateEndTomorrow = GetEndTomorrow(dataRequests, dateDto);
+            var dateBeginInSomeDays = GetDateBeginInSomeDays(dataRequests, dateDto).ToList();
+            var dateBeginTomorrow = GetBeginTomorrow(dataRequests, dateDto).ToList();
+            var dateEndTomorrow = GetEndTomorrow(dataRequests, dateDto).ToList();
 
             if (dateBeginInSomeDays.Count == 0
                 && dateBeginTomorrow.Count == 0
@@ -79,23 +77,74 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         return sb.ToString();
     }
 
+    public IEnumerable<Request> GetEndTomorrow(IEnumerable<Request> requests, DateDto dateDto)
+    {
+        DateTime tomorrow = dateDto.From.AddDays(1).Date;
+
+        return requests
+            .Where(r => r.Services.
+                Any(s => s is { InformationServiceType: InformationServiceType.AirTicket } &&
+                         s.Flights.Any(f => f.FlightsType == FlightsType.Charter)))
+            .Where(r =>
+            {
+                InformationServices airTicketService = r.Services.
+                    First(s => s.InformationServiceType == InformationServiceType.AirTicket);
+
+                IEnumerable<Flights> charterFlights = airTicketService.Flights
+                    .Where(f => f.FlightsType == FlightsType.Charter);
+
+                IEnumerable<Flights> flightsWithDates = charterFlights
+                    .Where(f => f.DateBeginAsDate is not null)
+                    .ToList();
+
+                var flightsWithLaterDates = flightsWithDates
+                    .Where(f1 =>
+                        flightsWithDates
+                            .Any(f2 => f2.DateBeginAsDate?.AddDays(2) < f1.DateBeginAsDate))
+                    .ToList();
+
+                if (flightsWithLaterDates.Count == 0) return false;
+
+                Flights? minLaterFlight = flightsWithLaterDates.MinBy(f => f.DateBeginAsDate);
+
+                return minLaterFlight?.DateBeginAsDate == tomorrow;
+            });
+    }
+
+    public IEnumerable<Request> GetDateBeginInSomeDays(IEnumerable<Request> requests, DateDto dateDto)
+    {
+        DateTime targetDate = dateDto.From.AddDays(dateDto.Days).Date;
+
+        return requests
+            .Where(r =>
+                r.DateBeginAsDate == targetDate ||
+                (r.DateBeginAsDate < targetDate &&
+                r.DateRequestAsDate?.AddDays(1) == dateDto.From))
+            .DistinctBy(r => r.IdSystem);
+    }
+
+    public IEnumerable<Request> GetBeginTomorrow(IEnumerable<Request> requests, DateDto dateDto)
+    {
+        DateTime tomorrow = dateDto.From.AddDays(1).Date;
+
+        return requests
+            .Where(r => r.DateBeginAsDate == tomorrow &&
+                r.Services?
+                    .Any(s =>
+                        s.InformationServiceType == InformationServiceType.AirTicket &&
+                        s.Flights?
+                            .Any(f => f.FlightsType == FlightsType.Charter) == true) == true)
+            .DistinctBy(r => r.IdSystem);
+    }
+
     private void FillDocuments(StringBuilder sb, List<Request> requests)
     {
         if (requests.Count <= 0) return;
 
         sb.AppendLine("Документы на вылет: ");
 
-        foreach (Request date in requests)
-        {
-            InformationServices? service = date.Services?
-                .Where(s => s.InformationServiceType == InformationServiceType.AirTicket).FirstOrDefault();
-
-            string type = (service?.Flights?.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified).GetDescription();
-
-            sb.AppendLine(
-                $"Id: {date.IdSystem}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
-                $" \nДата вылета: {date.DateBegin}, \nТип самолета: {type}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
-        }
+        foreach (Request request in requests)
+            sb.AppendLine(GetRequestInformation(request));
     }
 
     private void FillTickets(StringBuilder sb, List<Request> dateBeginTomorrow, List<Request> dateEndTomorrow)
@@ -111,86 +160,31 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
     private void FillAirTicketsTomorrowBegin(StringBuilder sb, List<Request> requests)
     {
-        foreach (Request date in requests)
-        {
-            InformationServices? service = date.Services?
-                .Where(s => s.InformationServiceType == InformationServiceType.AirTicket).FirstOrDefault();
-
-            string type = (service?.Flights?.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified).GetDescription();
-
-            sb.AppendLine(
-                $"Id: {date.IdSystem}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
-                $" \nДата вылета: {date.DateBegin}, \nТип самолета: {type}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
-        }
+        foreach (Request request in requests)
+            sb.AppendLine(GetRequestInformation(request));
     }
 
     private void FillAirTicketsTomorrowEnd(StringBuilder sb, List<Request> requests)
     {
-        foreach (Request date in requests)
-        {
-            InformationServices? service = date.Services?
-                .Where(s => s.InformationServiceType == InformationServiceType.AirTicket).FirstOrDefault();
-
-            string type = (service?.Flights?.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified).GetDescription();
-
-            sb.AppendLine(
-                $"Id: {date.IdSystem}, \nФИО: {date.ClientLastName} {date.ClientFirstName} {date.ClientMiddleName}," +
-                $" \nДата вылета: {date.DateEnd}, \nТип самолета: {type}, \nПочта: {date.ClientEmail}, \nТуроператор: {WebUtility.HtmlDecode(date.SupplierName)}\n");
-        }
+        foreach (Request request in requests)
+            sb.AppendLine(GetRequestInformation(request));
     }
 
-    private List<Request> GetEndTomorrow(IEnumerable<Request> requests, DateDto dateDto)
+    private string GetRequestInformation(Request request)
     {
-        var results = requests
-            .Where(r =>
-                r.Services?
-                    .Any(s =>
-                        s.InformationServiceType == InformationServiceType.AirTicket &&
-                        s.Flights?.Any(f => f.FlightsType == FlightsType.Charter) == true &&
-                        DateTime.TryParse(
-                            s.Flights?
-                            .Where(f1 => s.Flights?
-                                .Any(f2 =>
-                                    f1 != f2 &&
-                                    DateTime.TryParse(f1.DateBegin, out DateTime value1) &&
-                                    DateTime.TryParse(f2.DateBegin, out DateTime value2) &&
-                                    value1 > value2.AddDays(2)) == true)
-                            .MinBy(f => DateTime.Parse(f.DateBegin ?? "2000-01-01"))?.DateBegin,
-                            out DateTime value) &&
-                        value == dateDto.From.AddDays(1)) == true)
-            .DistinctBy(r => r.IdSystem)
-            .ToList();
+        InformationServices? airTickerService = request.Services.FirstOrDefault(s => s.InformationServiceType == InformationServiceType.AirTicket);
+        FlightsType flightType = airTickerService?.Flights?.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified;
 
-        return results;
-    }
+        string type = flightType.GetDescription();
+        string tourOperator = WebUtility.HtmlDecode(request.SupplierName);
 
-    private List<Request> GetDateBeginInSomeDays(List<Request> requests, DateDto dateDto)
-    {
-        IEnumerable<Request> r1 = requests
-            .Where(r =>
-                !string.IsNullOrEmpty(r.DateBegin) &&
-                DateTime.TryParse(r.DateBegin, out DateTime value) &&
-                value.Date == dateDto.From.AddDays(dateDto.Days).Date);
-        var r2 = r1
-            .DistinctBy(r => r.IdSystem)
-            .ToList();
-        return r2;
-    }
-
-    private List<Request> GetBeginTomorrow(List<Request> requests, DateDto dateDto)
-    {
-        return requests
-            .Where(r =>
-                !string.IsNullOrEmpty(r.DateBegin) &&
-                DateTime.TryParse(r.DateBegin, out DateTime value) &&
-                value.Date == dateDto.From.AddDays(1).Date &&
-                r.Services?
-                    .Any(s =>
-                        s.InformationServiceType == InformationServiceType.AirTicket &&
-                        s.Flights?
-                            .Any(f => f.FlightsType == FlightsType.Charter) == true) == true)
-            .DistinctBy(r => r.IdSystem)
-            .ToList();
+        return $@"Id: {request.IdSystem}, 
+ФИО: {request.ClientLastName} {request.ClientFirstName} {request.ClientMiddleName}, 
+Дата вылета: {request.DateBegin}, 
+Тип самолета: {type}, 
+Почта: {request.ClientEmail}, 
+Туроператор: {tourOperator}
+";
     }
 
     private async Task LoadAllRequestsAsync(DateDto dateDto)

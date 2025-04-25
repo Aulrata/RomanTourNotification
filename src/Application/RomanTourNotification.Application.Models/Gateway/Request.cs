@@ -10,6 +10,9 @@ public class Request
     [JsonPropertyName("id_system")]
     public int IdSystem { get; private set; }
 
+    [JsonPropertyName("dat_request")]
+    public string DateRequest { get; private set; }
+
     [JsonPropertyName("date_begin")]
     public string DateBegin { get; private set; }
 
@@ -34,12 +37,15 @@ public class Request
     [JsonPropertyName("status_id")]
     public string StatusId { get; private set; }
 
+    public RequestStatus Status { get; private set; }
+
     [JsonPropertyName("services")]
     public IEnumerable<InformationServices> Services { get; init; }
 
     public Request(
         int id,
         int idSystem,
+        string dateRequest,
         string dateBegin,
         string supplierName,
         string clientLastName,
@@ -61,5 +67,11 @@ public class Request
         DateEnd = dateEnd;
         StatusId = statusId;
         Services = services;
+        DateRequest = dateRequest;
+        Status = (RequestStatus)int.Parse(StatusId);
     }
+
+    public DateTime? DateBeginAsDate => DateTime.TryParse(DateBegin, out DateTime result) ? result.Date : null;
+
+    public DateTime? DateRequestAsDate => DateTime.TryParse(DateRequest, out DateTime result) ? result.Date : null;
 }
