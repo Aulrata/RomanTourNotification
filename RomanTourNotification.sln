@@ -31,6 +31,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RomanTourNotification", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RomanTourNotification.Presentation.TelegramBot", "src\Presentation\RomanTourNotification.Presentation.TelegramBot\RomanTourNotification.Presentation.TelegramBot.csproj", "{D9F9710F-5C29-4D94-BE3B-9404346E1233}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E03961D8-4CBC-4A2D-866A-3BCF96DEDBDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RomanTourNotification.Tests.EnrichmentNotificationTest", "tests\RomanTourNotification.Tests.EnrichmentNotificationTest\RomanTourNotification.Tests.EnrichmentNotificationTest.csproj", "{EFA6BB42-3019-46DF-A2E7-9D8EED017BFB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +51,7 @@ Global
 		{E0C7A0FA-E3B6-4C7C-8360-CD72806AAC66} = {6612692B-A111-4856-A058-9CF4C2672F92}
 		{AE85F8D2-4986-40AE-A92C-683CE1DB59BC} = {A5DDAC88-3B8F-4674-8E0C-F8A50A52ACD3}
 		{D9F9710F-5C29-4D94-BE3B-9404346E1233} = {683CE8ED-DAEA-4EAB-B1B4-FF5098763CFF}
+		{EFA6BB42-3019-46DF-A2E7-9D8EED017BFB} = {E03961D8-4CBC-4A2D-866A-3BCF96DEDBDD}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{CB41BAB3-2742-49A4-9534-C33C9CC21103}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -81,5 +86,9 @@ Global
 		{D9F9710F-5C29-4D94-BE3B-9404346E1233}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9F9710F-5C29-4D94-BE3B-9404346E1233}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9F9710F-5C29-4D94-BE3B-9404346E1233}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFA6BB42-3019-46DF-A2E7-9D8EED017BFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFA6BB42-3019-46DF-A2E7-9D8EED017BFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFA6BB42-3019-46DF-A2E7-9D8EED017BFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFA6BB42-3019-46DF-A2E7-9D8EED017BFB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
