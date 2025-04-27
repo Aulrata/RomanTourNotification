@@ -1,50 +1,36 @@
 using Microsoft.Extensions.Logging;
+using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
-using RomanTourNotification.Application.Contracts.Gateway;
 using RomanTourNotification.Application.Extensions;
+using RomanTourNotification.Application.Models.DownloadData;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
 using System.Net;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace RomanTourNotification.Application.EnrichmentNotification;
 
 public class EnrichmentNotificationService : IEnrichmentNotificationService
 {
-    private readonly IEnumerable<ApiSettings> _apiSettings;
-    private readonly IGatewayService _gatewayService;
-    private readonly JsonSerializerOptions _jsonSerializerOptions;
-    private readonly List<LoadData> _loadedData;
     private readonly ILogger<EnrichmentNotificationService> _logger;
-    private DateTime _lastLoadDate;
+    private readonly ILoadDataService _loadDataService;
 
     public EnrichmentNotificationService(
-        IEnumerable<ApiSettings> apiSettings,
-        IGatewayService gatewayService,
-        ILogger<EnrichmentNotificationService> logger)
+        ILogger<EnrichmentNotificationService> logger,
+        ILoadDataService loadDataService)
     {
-        _apiSettings = apiSettings;
-        _gatewayService = gatewayService;
         _logger = logger;
-        _jsonSerializerOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        };
-        _loadedData = [];
+        _loadDataService = loadDataService;
     }
 
     public async Task<string> GetArrivalByDateAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
-        if (_lastLoadDate != DateTime.Today)
-            await LoadAllRequestsAsync(dateDto);
+        IEnumerable<LoadedData> loadedData = await _loadDataService.GetLoadedRequests(dateDto, cancellationToken);
 
         StringBuilder sb = new();
         sb.AppendLine($"{EnrichmentNotificationMapper.DaysMapper(dateDto.From.DayOfWeek)}\n ");
 
-        foreach (LoadData loadData in _loadedData)
+        foreach (LoadedData loadData in loadedData)
         {
             if (loadData.Requests is null)
                 continue;
@@ -52,6 +38,8 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
             var dataRequests = loadData.Requests
                 .Where(x => x.Status is not RequestStatus.Cancelled)
                 .ToList();
+
+            _logger.LogInformation("Start combine notify message");
 
             var dateBeginInSomeDays = GetDateBeginInSomeDays(dataRequests, dateDto).ToList();
             var dateBeginTomorrow = GetBeginTomorrow(dataRequests, dateDto).ToList();
@@ -185,51 +173,5 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 Почта: {request.ClientEmail}, 
 Туроператор: {tourOperator}
 ";
-    }
-
-    private async Task LoadAllRequestsAsync(DateDto dateDto)
-    {
-        Console.WriteLine("Start loading all requests data");
-        _loadedData.Clear();
-        foreach (ApiSettings apiSetting in _apiSettings)
-        {
-            List<Request> data = [];
-            var loadData = new LoadData
-            {
-                Name = apiSetting.Name,
-            };
-
-            int page = 1;
-            Root? root;
-
-            do
-            {
-                // TODO Use Stream
-                ContextDto context = await _gatewayService.GetArrivalByDateAsync(
-                    apiSetting.Api,
-                    dateDto.From.AddYears(-1),
-                    dateDto.From,
-                    page);
-
-                // TODO DeserializeAsync
-                root = JsonSerializer.Deserialize<Root>(context.Stream, _jsonSerializerOptions);
-
-                if (root?.Requests is null)
-                {
-                    _logger.LogWarning("Requests is null");
-                    return;
-                }
-
-                data.AddRange(root.Requests);
-
-                page++;
-            }
-            while (page <= root.PagesAll);
-
-            loadData.Requests = data;
-            _loadedData.Add(loadData);
-        }
-
-        _lastLoadDate = DateTime.Today;
     }
 }

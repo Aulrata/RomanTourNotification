@@ -1,8 +1,8 @@
 using RomanTourNotification.Application.Models.Gateway;
 
-namespace RomanTourNotification.Application.Models.EnrichmentNotification;
+namespace RomanTourNotification.Application.Models.DownloadData;
 
-public class LoadData
+public class LoadedData
 {
     public string Name { get; set; } = string.Empty;
 
