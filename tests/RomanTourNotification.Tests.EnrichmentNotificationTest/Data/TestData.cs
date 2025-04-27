@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
+using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.Gateway;
+using RomanTourNotification.Application.DownloadData;
 using RomanTourNotification.Application.EnrichmentNotification;
 using RomanTourNotification.Application.Gateway;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
@@ -12,11 +14,11 @@ public static class TestData
     public static EnrichmentNotificationService GetEnrichmentService()
     {
         IEnumerable<ApiSettings> api = [new()];
-        ILogger<GatewayService> logger = new Logger<GatewayService>(new LoggerFactory());
-        ILogger<EnrichmentNotificationService> logger2 = new Logger<EnrichmentNotificationService>(new LoggerFactory());
-        IGatewayService gateway = new GatewayService(new HttpClient(), logger);
+        IGatewayService gateway = new GatewayService(new HttpClient(), new Logger<GatewayService>(new LoggerFactory()));
 
-        return new EnrichmentNotificationService(api, gateway, logger2);
+        ILoadDataService loadDataService = new LoadDataService(gateway, new Logger<LoadDataService>(new LoggerFactory()), api);
+
+        return new EnrichmentNotificationService(new Logger<EnrichmentNotificationService>(new LoggerFactory()), loadDataService);
     }
 
     public static IEnumerable<Request> GetRequests()
