@@ -140,6 +140,9 @@ public class NotificationBotReceiving
 
                 value = user;
 
+                if (value.Role is UserRole.Unspecified)
+                    return;
+
                 _users.Add(userId, value);
             }
 
