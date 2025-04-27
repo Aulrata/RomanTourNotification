@@ -21,20 +21,21 @@ public class GatewayService : IGatewayService
         string key,
         DateTime dateFrom,
         DateTime dateTo,
+        CancellationToken cancellationToken,
         int page = 0,
         string format = "json")
     {
         string url =
             $"{_httpClient.BaseAddress?.OriginalString}/{key}/{ClassUrl}s/{dateFrom:yyyy-MM-dd}/{dateTo:yyyy-MM-dd}/{page}.{format}";
 
-        return await SendRequest(HttpMethod.Get, url);
+        return await SendRequest(HttpMethod.Get, url, cancellationToken);
     }
 
-    private async Task<ContextDto> SendRequest(HttpMethod method, string url)
+    private async Task<ContextDto> SendRequest(HttpMethod method, string url, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = new(method, url);
 
-        using HttpResponseMessage response = await _httpClient.SendAsync(request);
+        using HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
 
         if (response.StatusCode is not HttpStatusCode.OK)
         {
@@ -42,7 +43,7 @@ public class GatewayService : IGatewayService
             throw new HttpRequestException($"Request failed with status code {response.StatusCode}");
         }
 
-        string content = await response.Content.ReadAsStringAsync();
+        string content = await response.Content.ReadAsStringAsync(cancellationToken);
 
         return new ContextDto(content, response.StatusCode);
     }
