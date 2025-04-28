@@ -52,16 +52,9 @@ public class ChooseRoleHandler : CommandHandler
 
             var backIterator = new Iterator($"users choose_user show_user {context.Iterator.ObjectId}");
 
-            var backContext = new HandlerContext(
-                context.User,
-                backIterator,
-                context.BotClient,
-                context.CancellationToken,
-                context.UserService,
-                context.MessageId);
+            HandlerContext backContext = context with { Iterator = backIterator };
 
-            // Вызываем обработчик для команды "users"
-            var userHandler = new UserHandler(); // Замените на ваш обработчик
+            var userHandler = new UserHandler();
             await userHandler.Handle(backContext);
         }
         else
