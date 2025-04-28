@@ -5,5 +5,5 @@ namespace RomanTourNotification.Application.Contracts.DownloadData;
 
 public interface ILoadDataService
 {
-    public Task<IEnumerable<LoadedData>> GetLoadedRequests(DateDto dateDto, CancellationToken cancellationToken);
+    public Task<IEnumerable<LoadedData>> GetLoadedRequestsAsync(DateDto dateDto, CancellationToken cancellationToken);
 }

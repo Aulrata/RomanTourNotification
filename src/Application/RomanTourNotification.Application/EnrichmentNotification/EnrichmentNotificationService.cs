@@ -25,10 +25,10 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
     public async Task<string> GetArrivalByDateAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
-        IEnumerable<LoadedData> loadedData = await _loadDataService.GetLoadedRequests(dateDto, cancellationToken);
+        IEnumerable<LoadedData> loadedData = await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
 
         StringBuilder sb = new();
-        sb.AppendLine($"{EnrichmentNotificationMapper.DaysMapper(dateDto.From.DayOfWeek)}\n ");
+        sb.AppendLine($"{dateDto.From.Date:dd.MM.yyyy}\n ");
 
         foreach (LoadedData loadData in loadedData)
         {
@@ -167,7 +167,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         string tourOperator = WebUtility.HtmlDecode(request.SupplierName);
 
         return $@"Id: {request.IdSystem}, 
-ФИО: {request.ClientLastName} {request.ClientFirstName} {request.ClientMiddleName}, 
+ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
 Дата вылета: {request.DateBegin}, 
 Тип самолета: {type}, 
 Почта: {request.ClientEmail}, 

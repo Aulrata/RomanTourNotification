@@ -23,7 +23,7 @@ public class Request
     public string SupplierName { get; private set; }
 
     [JsonPropertyName("client_surname")]
-    public string ClientLastName { get; private set; }
+    public string ClientSurname { get; private set; }
 
     [JsonPropertyName("client_name")]
     public string ClientFirstName { get; private set; }
@@ -42,36 +42,78 @@ public class Request
     [JsonPropertyName("services")]
     public IEnumerable<InformationServices> Services { get; init; }
 
+    [JsonPropertyName("calc_price")]
+    public double? CalcPrice { get; set; }
+
+    [JsonPropertyName("calc_client")]
+    public double? CalcClient { get; set; }
+
+    [JsonPropertyName("manager_surname")]
+    public string ManagerSurname { get; set; }
+
+    [JsonPropertyName("manager_name")]
+    public string ManagerName { get; set; }
+
+    [JsonPropertyName("manager_sname")]
+    public string ManagerMiddleName { get; set; }
+
+    [JsonPropertyName("payment_deadline_client")]
+    public string PaymentDeadlineClient { get; set; }
+
+    [JsonPropertyName("company_name_rus")]
+    public string CompanyNameRus { get; set; }
+
     public Request(
         int id,
         int idSystem,
         string dateRequest,
         string dateBegin,
         string supplierName,
-        string clientLastName,
+        string clientSurname,
         string clientFirstName,
         string clientMiddleName,
         string clientEmail,
         string dateEnd,
         string statusId,
-        IEnumerable<InformationServices> services)
+        IEnumerable<InformationServices> services,
+        string managerSurname,
+        string managerName,
+        string managerMiddleName,
+        string paymentDeadlineClient,
+        string companyNameRus)
     {
         Id = id;
         IdSystem = idSystem;
         DateBegin = dateBegin;
         SupplierName = supplierName;
-        ClientLastName = clientLastName;
+        ClientSurname = clientSurname;
         ClientFirstName = clientFirstName;
         ClientMiddleName = clientMiddleName;
         ClientEmail = clientEmail;
         DateEnd = dateEnd;
         StatusId = statusId;
         Services = services;
+        ManagerSurname = managerSurname;
+        ManagerName = managerName;
+        ManagerMiddleName = managerMiddleName;
+        PaymentDeadlineClient = paymentDeadlineClient;
+        CompanyNameRus = companyNameRus;
         DateRequest = dateRequest;
         Status = (RequestStatus)int.Parse(StatusId);
     }
 
-    public DateTime? DateBeginAsDate => DateTime.TryParse(DateBegin, out DateTime result) ? result.Date : null;
+    public DateTime? DateBeginAsDate => DateTime.
+        TryParse(DateBegin, out DateTime result) ? result.Date : null;
 
-    public DateTime? DateRequestAsDate => DateTime.TryParse(DateRequest, out DateTime result) ? result.Date : null;
+    public DateTime? DateRequestAsDate => DateTime.
+        TryParse(DateRequest, out DateTime result) ? result.Date : null;
+
+    public DateTime? DatePaymentDeadline => DateTime.
+        TryParse(PaymentDeadlineClient, out DateTime result) ? result.Date : null;
+
+    public double ClientDebt => (CalcPrice ?? 0.00) - (CalcClient ?? 0.00);
+
+    public string ManagerFullName => $"{ManagerSurname} {ManagerName} {ManagerMiddleName}";
+
+    public string CompanyNameShort => CompanyNameRus.Split(' ')[1];
 }

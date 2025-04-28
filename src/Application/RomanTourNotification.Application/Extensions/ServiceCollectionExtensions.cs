@@ -6,11 +6,13 @@ using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
 using RomanTourNotification.Application.Contracts.Gateway;
 using RomanTourNotification.Application.Contracts.Groups;
+using RomanTourNotification.Application.Contracts.PaymentNotification;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.DownloadData;
 using RomanTourNotification.Application.EnrichmentNotification;
 using RomanTourNotification.Application.Groups;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
+using RomanTourNotification.Application.PaymentNotification;
 using RomanTourNotification.Application.Users;
 
 namespace RomanTourNotification.Application.Extensions;
@@ -31,6 +33,16 @@ public static class ServiceCollectionExtensions
 
             return new LoadDataService(gateway, logger, apiSettings);
         });
+
+        collection.AddScoped<IPaymentNotificationService, PaymentNotificationService>(p =>
+        {
+            ILogger<PaymentNotificationService> logger =
+                p.GetRequiredService<ILogger<PaymentNotificationService>>();
+            ILoadDataService loadDataService = p.GetRequiredService<ILoadDataService>();
+
+            return new PaymentNotificationService(logger, loadDataService);
+        });
+
         collection.AddScoped<IEnrichmentNotificationService, EnrichmentNotificationService>(provider =>
         {
             ILogger<EnrichmentNotificationService> logger =

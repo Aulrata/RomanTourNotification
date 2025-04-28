@@ -34,7 +34,7 @@ public class LoadDataService : ILoadDataService
         _loadedData = [];
     }
 
-    public async Task<IEnumerable<LoadedData>> GetLoadedRequests(DateDto dateDto, CancellationToken cancellationToken)
+    public async Task<IEnumerable<LoadedData>> GetLoadedRequestsAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
         if (_lastLoadData != DateTime.Today.Date)
             await GetAllRequestAsync(dateDto, cancellationToken);
