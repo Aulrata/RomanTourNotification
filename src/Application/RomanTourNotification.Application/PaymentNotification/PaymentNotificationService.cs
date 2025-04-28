@@ -4,7 +4,6 @@ using RomanTourNotification.Application.Contracts.PaymentNotification;
 using RomanTourNotification.Application.Models.DownloadData;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
-using System.Globalization;
 using System.Text;
 
 namespace RomanTourNotification.Application.PaymentNotification;
@@ -13,7 +12,6 @@ public class PaymentNotificationService : IPaymentNotificationService
 {
     private readonly ILogger<PaymentNotificationService> _logger;
     private readonly ILoadDataService _loadDataService;
-    private readonly CultureInfo _culture;
 
     public PaymentNotificationService(
         ILogger<PaymentNotificationService> logger,
@@ -21,15 +19,6 @@ public class PaymentNotificationService : IPaymentNotificationService
     {
         _logger = logger;
         _loadDataService = loadDataService;
-
-        _culture = new CultureInfo("ru-RU")
-        {
-            NumberFormat =
-            {
-                NumberGroupSeparator = " ",
-                NumberDecimalSeparator = ".",
-            },
-        };
     }
 
     public async Task<string> GetPaymentMessageAsync(DateDto dateDto, CancellationToken cancellationToken)
@@ -51,9 +40,7 @@ public class PaymentNotificationService : IPaymentNotificationService
 
                                   Id: {request.IdSystem}, 
                                   ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
-                                  ИП: {request.CompanyNameShort}, 
-                                  Почта: {request.ClientEmail}, 
-                                  Долг: {request.ClientDebt.ToString("#,##0.00", _culture)},
+                                  ИП: {request.CompanyNameShort}
 
                                   """;
                 sb.Append(message);

@@ -60,7 +60,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         }
 
         if (sb.Length < 15)
-            sb.AppendLine("Сегодня ничего нет\n");
+            sb.AppendLine("Документов на отправку нет\n");
 
         return sb.ToString();
     }
@@ -120,8 +120,8 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 r.Services?
                     .Any(s =>
                         s.InformationServiceType == InformationServiceType.AirTicket &&
-                        s.Flights?
-                            .Any(f => f.FlightsType == FlightsType.Charter) == true) == true)
+                        s.Flights
+                            .Any(f => f.FlightsType == FlightsType.Charter)) == true)
             .DistinctBy(r => r.IdSystem);
     }
 
@@ -161,7 +161,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
     private string GetRequestInformation(Request request)
     {
         InformationServices? airTickerService = request.Services.FirstOrDefault(s => s.InformationServiceType == InformationServiceType.AirTicket);
-        FlightsType flightType = airTickerService?.Flights?.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified;
+        FlightsType flightType = airTickerService?.Flights.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified;
 
         string type = flightType.GetDescription();
         string tourOperator = WebUtility.HtmlDecode(request.SupplierName);
