@@ -28,7 +28,12 @@ public class ArrivalEmptyCollections
             "email1@example.com",
             "2023-01-02",
             "1",
-            new List<InformationServices>());
+            new List<InformationServices>(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var requests = new List<Request> { requestWithoutServices };
 
@@ -58,7 +63,12 @@ public class ArrivalEmptyCollections
             "email2@example.com",
             "2023-02-02",
             "2",
-            new List<InformationServices> { serviceWithoutFlights });
+            new List<InformationServices> { serviceWithoutFlights },
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var requests = new List<Request> { request };
 
@@ -101,7 +111,12 @@ public class ArrivalEmptyCollections
             "email3@example.com",
             "2023-04-02",
             "3",
-            new List<InformationServices> { serviceWithUnknownType });
+            new List<InformationServices> { serviceWithUnknownType },
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var requests = new List<Request> { request };
 
@@ -139,7 +154,12 @@ public class ArrivalEmptyCollections
             "email4@example.com",
             "2023-05-04",
             "4",
-            new List<InformationServices> { service1, service2 });
+            new List<InformationServices> { service1, service2 },
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var requests = new List<Request> { request };
 
@@ -174,7 +194,12 @@ public class ArrivalEmptyCollections
             "email5@example.com",
             "2023-06-02",
             "5",
-            new List<InformationServices> { service });
+            new List<InformationServices> { service },
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var requests = new List<Request> { request };
 

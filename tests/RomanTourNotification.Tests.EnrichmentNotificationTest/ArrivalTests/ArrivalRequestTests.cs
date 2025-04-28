@@ -72,7 +72,12 @@ public class ArrivalRequestTests
             "email1@example.com",
             "2023-01-02",
             "1",
-            new List<InformationServices>());
+            new List<InformationServices>(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var requests = new List<Request> { requestWithoutServices };
 

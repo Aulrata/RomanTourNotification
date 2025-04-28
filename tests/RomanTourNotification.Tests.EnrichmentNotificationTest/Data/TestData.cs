@@ -56,7 +56,12 @@ public static class TestData
             string.Empty,
             "2025-04-30",
             "2",
-            new List<InformationServices> { service1, service2 });
+            new List<InformationServices> { service1, service2 },
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var request2 = new Request(
             2,
@@ -70,7 +75,12 @@ public static class TestData
             string.Empty,
             "2025-04-27 22:05",
             "2",
-            new List<InformationServices>());
+            new List<InformationServices>(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var request3 = new Request(
             3,
@@ -84,7 +94,12 @@ public static class TestData
             string.Empty,
             "2025-05-05 22:00",
             "4",
-            new List<InformationServices>());
+            new List<InformationServices>(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         return new List<Request> { request1, request2, request3 };
     }
@@ -103,7 +118,12 @@ public static class TestData
             string.Empty,
             "2025-04-27 22:05",
             "2",
-            new List<InformationServices>());
+            new List<InformationServices>(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var request2 = new Request(
             2,
@@ -117,7 +137,12 @@ public static class TestData
             string.Empty,
             "2025-04-27 22:05",
             "2",
-            new List<InformationServices>());
+            new List<InformationServices>(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var request3 = new Request(
             3,
@@ -131,7 +156,12 @@ public static class TestData
             string.Empty,
             "2025-04-27 22:05",
             "2",
-            new List<InformationServices>());
+            new List<InformationServices>(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var request4 = new Request(
             4,
@@ -145,7 +175,12 @@ public static class TestData
             string.Empty,
             "2025-04-27 22:05",
             "2",
-            new List<InformationServices>());
+            new List<InformationServices>(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         var request5 = new Request(
             5,
@@ -159,7 +194,12 @@ public static class TestData
             string.Empty,
             "2025-04-27 22:05",
             "2",
-            new List<InformationServices>());
+            new List<InformationServices>(),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
 
         return new List<Request> { request1, request2, request3, request4, request5 };
     }
