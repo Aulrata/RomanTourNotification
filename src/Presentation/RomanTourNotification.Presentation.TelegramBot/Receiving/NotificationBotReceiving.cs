@@ -151,10 +151,11 @@ public class NotificationBotReceiving
             }
 
             var iterator = new Iterator(text);
-            var context = new HandlerContext(value, iterator, _botClient, cancellationToken, _userService, messageId);
+            var context = new HandlerContext(value, iterator, _botClient, cancellationToken, _userService, _groupService, messageId);
             var startHandler = new StartHandler();
             var userHandler = new UserHandler();
-            await startHandler.SetNext(userHandler);
+            var groupHandler = new GroupHandler();
+            await startHandler.SetNext(userHandler).Result.SetNext(groupHandler);
             await startHandler.Handle(context);
         }
         catch (Exception ex)
@@ -183,7 +184,7 @@ public class NotificationBotReceiving
             return;
         }
 
-        var group = new Group(0, groupTitle, groupId, user.Id, GroupType.Unspecified, DateTime.Now);
+        var group = new Group(0, groupTitle, groupId, user.Id, string.Empty, GroupType.Unspecified, DateTime.Now);
 
         Group? addedGroup = await _groupService.AddAsync(group, cancellationToken);
 
@@ -207,10 +208,10 @@ public class NotificationBotReceiving
 
         if (deletedGroup == 0)
         {
-            Console.WriteLine("Group already deleted");
+            _logger.LogInformation("Group already deleted");
             return;
         }
 
-        Console.WriteLine($"Пользователь {chatMember.From.Username} удалил бота из группы {chatMember.Chat.Title}");
+        _logger.LogWarning($"Пользователь {chatMember.From.Username} удалил бота из группы {chatMember.Chat.Title}");
     }
 }

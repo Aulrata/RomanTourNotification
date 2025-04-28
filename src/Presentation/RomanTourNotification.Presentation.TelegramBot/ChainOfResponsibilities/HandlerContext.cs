@@ -1,3 +1,4 @@
+using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.Models.Users;
 using Telegram.Bot;
@@ -10,4 +11,5 @@ public record HandlerContext(
     ITelegramBotClient BotClient,
     CancellationToken CancellationToken,
     IUserService UserService,
+    IGroupService GroupService,
     int MessageId = 0);
