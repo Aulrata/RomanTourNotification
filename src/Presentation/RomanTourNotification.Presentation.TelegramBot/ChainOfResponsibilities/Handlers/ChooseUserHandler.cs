@@ -44,9 +44,6 @@ public class ChooseUserHandler : CommandHandler
 
             if (context.MessageId != 0)
             {
-                if (context.User.Id is null)
-                    return;
-
                 await context.BotClient.EditMessageText(
                     chatId: context.User.ChatId,
                     messageId: context.MessageId,

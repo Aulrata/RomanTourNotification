@@ -21,7 +21,7 @@ public class GroupService : IGroupService
             new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
             TransactionScopeAsyncFlowOption.Enabled);
 
-        Group? oldGroup = await _groupRepository.GetByGroupIdAsync(group.GroupId, cancellationToken);
+        Group? oldGroup = await _groupRepository.GetByChatIdAsync(group.ChatId, cancellationToken);
 
         if (oldGroup is not null)
             return null;

@@ -10,5 +10,5 @@ public interface IGroupRepository
 
     public Task<IEnumerable<Group>?> GetAllAsync(CancellationToken cancellationToken);
 
-    public Task<Group?> GetByGroupIdAsync(long groupId, CancellationToken cancellationToken);
+    public Task<Group?> GetByChatIdAsync(long chatId, CancellationToken cancellationToken);
 }
