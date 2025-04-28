@@ -5,5 +5,6 @@ public record Group(
     string Title,
     long ChatId,
     long UserId,
+    string ManagerFullname,
     GroupType GroupType,
     DateTime CreatedAt);
