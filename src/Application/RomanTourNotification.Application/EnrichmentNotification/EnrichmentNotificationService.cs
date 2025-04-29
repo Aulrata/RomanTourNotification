@@ -28,7 +28,12 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         IEnumerable<LoadedData> loadedData = await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
 
         StringBuilder sb = new();
-        sb.AppendLine($"{dateDto.From.Date:dd.MM.yyyy}\n ");
+        string greetings = $"""
+                            Доброе утро!
+                           Выписка документов на {dateDto.From.Date:dd.MM.yyyy}.
+                           
+                           """;
+        sb.AppendLine(greetings);
 
         foreach (LoadedData loadData in loadedData)
         {
@@ -166,12 +171,14 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         string type = flightType.GetDescription();
         string tourOperator = WebUtility.HtmlDecode(request.SupplierName);
 
-        return $@"Id: {request.IdSystem}, 
-ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
-Дата вылета: {request.DateBegin}, 
-Тип самолета: {type}, 
-Почта: {request.ClientEmail}, 
-Туроператор: {tourOperator}
-";
+        return $"""
+                Id: {request.IdSystem}, 
+                ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
+                Дата вылета: {request.DateBegin}, 
+                Тип самолета: {type}, 
+                Почта: {request.ClientEmail}, 
+                Туроператор: {tourOperator}
+
+                """;
     }
 }

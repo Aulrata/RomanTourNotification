@@ -27,8 +27,13 @@ public class PaymentNotificationService : IPaymentNotificationService
 
         var manageDataList = managerData.ToList();
         var sb = new StringBuilder();
+        string greetings = $"""
+                             Доброе утро!
+                            Доплата туристов на {dateDto.From.Date:dd.MM.yyyy}.
+                            
+                            """;
 
-        sb.AppendLine($"{dateDto.From.Date:dd.MM.yyyy}\n ");
+        sb.AppendLine(greetings);
         _logger.LogInformation($"Start formation message");
 
         foreach (IGrouping<string, Request> requests in manageDataList)
