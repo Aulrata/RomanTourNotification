@@ -19,4 +19,8 @@ public interface IGroupRepository
     public Task AddGroupTypeByIdAsync(long groupId, GroupType groupType, CancellationToken cancellationToken);
 
     public Task RemoveGroupTypeByIdAsync(long groupId, GroupType groupType, CancellationToken cancellationToken);
+
+    public Task AddManagerByIdAsync(long groupId, string managerFullname, CancellationToken cancellationToken);
+
+    public Task RemoveManagerByIdAsync(long groupId, CancellationToken cancellationToken);
 }

@@ -237,4 +237,45 @@ public class GroupRepository : IGroupRepository
 
         await command.ExecuteReaderAsync(cancellationToken);
     }
+
+    public async Task AddManagerByIdAsync(long groupId, string managerFullname, CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           UPDATE groups
+                           SET manager_fullname = :manager_fullname
+                           WHERE id = :group_id;
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter("group_id", groupId),
+                new NpgsqlParameter("manager_fullname", managerFullname),
+            },
+        };
+
+        await command.ExecuteReaderAsync(cancellationToken);
+    }
+
+    public async Task RemoveManagerByIdAsync(long groupId, CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           UPDATE groups
+                           SET manager_fullname = null
+                           WHERE id = :group_id;
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter("group_id", groupId),
+            },
+        };
+
+        await command.ExecuteReaderAsync(cancellationToken);
+    }
 }
