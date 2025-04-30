@@ -88,4 +88,32 @@ public class GroupService : IGroupService
         await _groupRepository.RemoveGroupTypeByIdAsync(groupId, groupType, cancellationToken);
         return true;
     }
+
+    public async Task<bool> AddGroupManager(long groupId, string managerFullname, CancellationToken cancellationToken)
+    {
+        Group? group = await _groupRepository.GetByIdAsync(groupId, cancellationToken);
+
+        if (group?.ManagerFullname == managerFullname)
+        {
+            _logger.LogInformation("У группы уже добавлен этот менеджер.");
+            return false;
+        }
+
+        await _groupRepository.AddManagerByIdAsync(groupId, managerFullname, cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> RemoveGroupManager(long groupId, CancellationToken cancellationToken)
+    {
+        Group? group = await _groupRepository.GetByIdAsync(groupId, cancellationToken);
+
+        if (string.IsNullOrEmpty(group?.ManagerFullname))
+        {
+            _logger.LogInformation("У группы уже удален менеджер.");
+            return false;
+        }
+
+        await _groupRepository.RemoveManagerByIdAsync(groupId, cancellationToken);
+        return true;
+    }
 }

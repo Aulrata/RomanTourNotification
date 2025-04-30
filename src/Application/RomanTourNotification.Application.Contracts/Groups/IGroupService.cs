@@ -19,4 +19,8 @@ public interface IGroupService
     public Task<bool> AddGroupTypeByIdAsync(long groupId, GroupType groupType, CancellationToken cancellationToken);
 
     public Task<bool> RemoveGroupTypeByIdAsync(long groupId, GroupType groupType, CancellationToken cancellationToken);
+
+    public Task<bool> AddGroupManager(long groupId, string managerFullname, CancellationToken cancellationToken);
+
+    public Task<bool> RemoveGroupManager(long groupId, CancellationToken cancellationToken);
 }
