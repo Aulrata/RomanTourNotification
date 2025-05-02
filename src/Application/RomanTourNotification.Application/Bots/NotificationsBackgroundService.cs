@@ -79,7 +79,7 @@ public class NotificationsBackgroundService : BackgroundService
 
     private async Task SendNotificationAsync(IEnumerable<Group> groups, CancellationToken cancellationToken)
     {
-        DateTime dateTimeToday = DateTime.Today;
+        DateTime dateTimeToday = DateTime.Today.AddDays(4);
         var currentDay = new DateDto(dateTimeToday);
 
         groups = groups.ToList();
@@ -134,29 +134,65 @@ public class NotificationsBackgroundService : BackgroundService
             return;
         }
 
-        var stringBuilder = new StringBuilder();
-
-        stringBuilder.Append(await _paymentNotificationService.GetPaymentMessageAsync(currentDay, cancellationToken));
-
-        if (currentDay.From.DayOfWeek is DayOfWeek.Friday)
-        {
-            var saturdayDay = new DateDto(currentDay.From.AddDays(1));
-            stringBuilder.Append(
-                await _paymentNotificationService.GetPaymentMessageAsync(saturdayDay, cancellationToken));
-
-            var sundayDay = new DateDto(currentDay.From.AddDays(2));
-            stringBuilder.Append(
-                await _paymentNotificationService.GetPaymentMessageAsync(sundayDay, cancellationToken));
-        }
-
-        string text = stringBuilder.ToString();
-
         foreach (Group group in groups)
         {
-            await _botClient.SendMessage(
-                group.ChatId,
-                text,
-                cancellationToken: cancellationToken);
+            var sb = new StringBuilder();
+            string greetings = $"""
+                                 Доброе утро!
+                                Доплата туристов на {currentDay.From.Date:dd.MM.yyyy}.
+
+                                """;
+
+            sb.AppendLine(greetings);
+
+            if (!string.IsNullOrEmpty(group.ManagerFullname))
+                await _paymentNotificationService.GetPaymentMessageByManagerAsync(currentDay, sb, group.ManagerFullname, cancellationToken);
+            else
+                await _paymentNotificationService.GetAllPaymentMessagesAsync(currentDay, sb, cancellationToken);
+
+            // if (currentDay.From.DayOfWeek is DayOfWeek.Friday)
+            await GetWeekendPaymentMessagesAsync(sb, currentDay, group.ManagerFullname, cancellationToken);
+
+            string message = sb.ToString();
+
+            await _botClient.SendMessage(group.ChatId, message, cancellationToken: cancellationToken);
         }
+    }
+
+    private async Task GetWeekendPaymentMessagesAsync(
+        StringBuilder sb,
+        DateDto currentDay,
+        string managerFullname,
+        CancellationToken cancellationToken)
+    {
+        bool hasManager = !string.IsNullOrEmpty(managerFullname);
+
+        var saturdayDay = new DateDto(currentDay.From.AddDays(1));
+        string saturdayGreetings = $"""
+
+                                    Доплата туристов на {saturdayDay.From.Date:dd.MM.yyyy}.
+
+                                    
+                                    """;
+        sb.Append(saturdayGreetings);
+
+        if (hasManager)
+            await _paymentNotificationService.GetPaymentMessageByManagerAsync(saturdayDay, sb, managerFullname, cancellationToken);
+        else
+            await _paymentNotificationService.GetAllPaymentMessagesAsync(saturdayDay, sb, cancellationToken);
+
+        var sundayDay = new DateDto(currentDay.From.AddDays(2));
+        string sundayGreetings = $"""
+                                  
+                                  Доплата туристов на {sundayDay.From.Date:dd.MM.yyyy}.
+
+                                  
+                                  """;
+        sb.Append(sundayGreetings);
+
+        if (hasManager)
+            await _paymentNotificationService.GetPaymentMessageByManagerAsync(sundayDay, sb, managerFullname, cancellationToken);
+        else
+            await _paymentNotificationService.GetAllPaymentMessagesAsync(sundayDay, sb, cancellationToken);
     }
 }
