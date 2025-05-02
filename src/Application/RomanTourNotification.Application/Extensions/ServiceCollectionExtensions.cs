@@ -34,23 +34,9 @@ public static class ServiceCollectionExtensions
             return new LoadDataService(gateway, logger, apiSettings);
         });
 
-        collection.AddScoped<IPaymentNotificationService, PaymentNotificationService>(p =>
-        {
-            ILogger<PaymentNotificationService> logger =
-                p.GetRequiredService<ILogger<PaymentNotificationService>>();
-            ILoadDataService loadDataService = p.GetRequiredService<ILoadDataService>();
+        collection.AddScoped<IPaymentNotificationService, PaymentNotificationService>();
 
-            return new PaymentNotificationService(logger, loadDataService);
-        });
-
-        collection.AddScoped<IEnrichmentNotificationService, EnrichmentNotificationService>(provider =>
-        {
-            ILogger<EnrichmentNotificationService> logger =
-                provider.GetRequiredService<ILogger<EnrichmentNotificationService>>();
-            ILoadDataService loadDataService = provider.GetRequiredService<ILoadDataService>();
-
-            return new EnrichmentNotificationService(logger, loadDataService);
-        });
+        collection.AddScoped<IEnrichmentNotificationService, EnrichmentNotificationService>();
         return collection;
     }
 
