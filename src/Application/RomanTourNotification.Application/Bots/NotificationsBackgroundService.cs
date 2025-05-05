@@ -79,7 +79,7 @@ public class NotificationsBackgroundService : BackgroundService
 
     private async Task SendNotificationAsync(IEnumerable<Group> groups, CancellationToken cancellationToken)
     {
-        DateTime dateTimeToday = DateTime.Today.AddDays(4);
+        DateTime dateTimeToday = DateTime.Today;
         var currentDay = new DateDto(dateTimeToday);
 
         groups = groups.ToList();
@@ -150,8 +150,8 @@ public class NotificationsBackgroundService : BackgroundService
             else
                 await _paymentNotificationService.GetAllPaymentMessagesAsync(currentDay, sb, cancellationToken);
 
-            // if (currentDay.From.DayOfWeek is DayOfWeek.Friday)
-            await GetWeekendPaymentMessagesAsync(sb, currentDay, group.ManagerFullname, cancellationToken);
+            if (currentDay.From.DayOfWeek is DayOfWeek.Friday)
+                await GetWeekendPaymentMessagesAsync(sb, currentDay, group.ManagerFullname, cancellationToken);
 
             string message = sb.ToString();
 
