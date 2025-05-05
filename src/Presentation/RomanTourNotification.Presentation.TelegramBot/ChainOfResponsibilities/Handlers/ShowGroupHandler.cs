@@ -35,6 +35,14 @@ public class ShowGroupHandler : CommandHandler
                     $"groups choose_group show_group {groupId} remove_group_type"),
             ],
             [
+                InlineKeyboardButton.WithCallbackData(
+                    "Добавить менеджера",
+                    $"groups choose_group show_group {groupId} add_group_manager"),
+                InlineKeyboardButton.WithCallbackData(
+                    "Удалить менеджера",
+                    $"groups choose_group show_group {groupId} remove_group_manager"),
+            ],
+            [
                 InlineKeyboardButton.WithCallbackData("Назад", "groups choose_group")
 
             ]
@@ -46,17 +54,22 @@ public class ShowGroupHandler : CommandHandler
 
             var addGroupTypeHandler = new AddGroupTypeHandler();
             var removeGroupTypeHandler = new RemoveGroupTypeHandler();
-            await addGroupTypeHandler.SetNext(removeGroupTypeHandler);
+            var addGroupManagerHandler = new AddGroupManagerHandler();
+            var removeGroupManagerHandler = new RemoveGroupManagerHandler();
+            await addGroupTypeHandler
+                .SetNext(removeGroupTypeHandler).Result
+                .SetNext(addGroupManagerHandler).Result
+                .SetNext(removeGroupManagerHandler);
             await addGroupTypeHandler.Handle(context);
         }
         else
         {
-            Group? group = await context.GroupService.GetByIdAsync(groupId, context.CancellationToken);
+            Group? group = await context.HandlerServices.GroupService.GetByIdAsync(groupId, context.CancellationToken);
 
             if (group is null)
                 return;
 
-            var types = (await context.GroupService.GetAllGroupTypesByIdAsync(group.Id, context.CancellationToken)).ToList();
+            var types = (await context.HandlerServices.GroupService.GetAllGroupTypesByIdAsync(group.Id, context.CancellationToken)).ToList();
 
             var sb = new StringBuilder();
             foreach (GroupType type in types) sb.Append($"{type.GetDescription()}, ");
