@@ -45,7 +45,7 @@ public class ChooseRoleHandler : CommandHandler
         {
             context.Iterator.MoveNext();
 
-            await context.UserService.UpdateUserRoleAsync(
+            await context.HandlerServices.UserService.UpdateUserRoleAsync(
                 context.Iterator.ObjectId,
                 (UserRole)int.Parse(context.Iterator.CurrentWord),
                 context.CancellationToken);

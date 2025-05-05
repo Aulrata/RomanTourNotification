@@ -27,7 +27,7 @@ public class ChooseUserHandler : CommandHandler
         }
         else
         {
-            IAsyncEnumerable<User> users = context.UserService.GetAllAsync(context.CancellationToken);
+            IAsyncEnumerable<User> users = context.HandlerServices.UserService.GetAllAsync(context.CancellationToken);
 
             var keyboardButtons = new List<InlineKeyboardButton[]>();
             await foreach (User? user in users.WithCancellation(context.CancellationToken))

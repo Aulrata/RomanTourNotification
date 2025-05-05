@@ -38,7 +38,7 @@ public class RemoveGroupTypeHandler : CommandHandler
         {
             context.Iterator.MoveNext();
 
-            await context.GroupService.RemoveGroupTypeByIdAsync(
+            await context.HandlerServices.GroupService.RemoveGroupTypeByIdAsync(
                 context.Iterator.ObjectId,
                 (GroupType)int.Parse(context.Iterator.CurrentWord),
                 context.CancellationToken);

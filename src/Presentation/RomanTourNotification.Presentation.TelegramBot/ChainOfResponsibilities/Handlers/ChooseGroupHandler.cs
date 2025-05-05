@@ -27,7 +27,7 @@ public class ChooseGroupHandler : CommandHandler
         }
         else
         {
-            IEnumerable<Group> groups = await context.GroupService.GetAllAsync(context.CancellationToken);
+            IEnumerable<Group> groups = await context.HandlerServices.GroupService.GetAllAsync(context.CancellationToken);
 
             var keyboardButtons = groups.Select(group => InlineKeyboardButton.WithCallbackData(
                     $"{group.Title}",

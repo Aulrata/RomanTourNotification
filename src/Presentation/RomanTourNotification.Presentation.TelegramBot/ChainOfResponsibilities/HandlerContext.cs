@@ -1,5 +1,3 @@
-using RomanTourNotification.Application.Contracts.Groups;
-using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.Models.Users;
 using Telegram.Bot;
 
@@ -10,6 +8,5 @@ public record HandlerContext(
     Iterator Iterator,
     ITelegramBotClient BotClient,
     CancellationToken CancellationToken,
-    IUserService UserService,
-    IGroupService GroupService,
+    HandlerServices HandlerServices,
     int MessageId = 0);

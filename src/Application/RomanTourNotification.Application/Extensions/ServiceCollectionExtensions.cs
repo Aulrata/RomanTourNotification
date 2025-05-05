@@ -21,7 +21,6 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection collection)
     {
-        // TODO: add services
         collection.AddSingleton<IUserService, UserService>();
         collection.AddSingleton<IGroupService, GroupService>();
         collection.AddScoped<ILoadDataService, LoadDataService>(p =>
@@ -32,6 +31,14 @@ public static class ServiceCollectionExtensions
                 p.GetRequiredService<ILogger<LoadDataService>>();
 
             return new LoadDataService(gateway, logger, apiSettings);
+        });
+        collection.AddScoped<ILoadEmployees, LoadEmployees>(p =>
+        {
+            IEnumerable<ApiSettings> apiSettings = p.GetRequiredService<IOptions<List<ApiSettings>>>().Value;
+            IGatewayService gateway = p.GetRequiredService<IGatewayService>();
+            ILogger<LoadEmployees> logger = p.GetRequiredService<ILogger<LoadEmployees>>();
+
+            return new LoadEmployees(gateway, apiSettings, logger);
         });
 
         collection.AddScoped<IPaymentNotificationService, PaymentNotificationService>();

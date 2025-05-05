@@ -38,7 +38,7 @@ public class AddGroupTypeHandler : CommandHandler
         {
             context.Iterator.MoveNext();
 
-            await context.GroupService.AddGroupTypeByIdAsync(
+            await context.HandlerServices.GroupService.AddGroupTypeByIdAsync(
                 context.Iterator.ObjectId,
                 (GroupType)int.Parse(context.Iterator.CurrentWord),
                 context.CancellationToken);

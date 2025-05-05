@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.Models.Groups;
@@ -18,6 +19,7 @@ public class NotificationBotReceiving
     private readonly ITelegramBotClient _botClient;
     private readonly IUserService _userService;
     private readonly IGroupService _groupService;
+    private readonly ILoadEmployees _loadEmployees;
     private readonly ILogger<NotificationBotReceiving> _logger;
 
     // TODO Учесть усдалеие пользователей
@@ -27,12 +29,14 @@ public class NotificationBotReceiving
         ITelegramBotClient botClient,
         IUserService userService,
         IGroupService groupService,
-        ILogger<NotificationBotReceiving> logger)
+        ILogger<NotificationBotReceiving> logger,
+        ILoadEmployees loadEmployees)
     {
         _botClient = botClient;
         _userService = userService;
         _groupService = groupService;
         _logger = logger;
+        _loadEmployees = loadEmployees;
         _users = [];
     }
 
@@ -151,7 +155,8 @@ public class NotificationBotReceiving
             }
 
             var iterator = new Iterator(text);
-            var context = new HandlerContext(value, iterator, _botClient, cancellationToken, _userService, _groupService, messageId);
+            var handlerServices = new HandlerServices(_userService, _groupService, _loadEmployees);
+            var context = new HandlerContext(value, iterator, _botClient, cancellationToken, handlerServices, messageId);
             var startHandler = new StartHandler();
             var userHandler = new UserHandler();
             var groupHandler = new GroupHandler();
