@@ -7,7 +7,6 @@ namespace RomanTourNotification.Application.Gateway;
 
 public class GatewayService : IGatewayService
 {
-    private const string ClassUrl = "request";
     private readonly HttpClient _httpClient;
     private readonly ILogger<GatewayService> _logger;
 
@@ -26,7 +25,14 @@ public class GatewayService : IGatewayService
         string format = "json")
     {
         string url =
-            $"{_httpClient.BaseAddress?.OriginalString}/{key}/{ClassUrl}s/{dateFrom:yyyy-MM-dd}/{dateTo:yyyy-MM-dd}/{page}.{format}";
+            $"{_httpClient.BaseAddress?.OriginalString}/{key}/requests/{dateFrom:yyyy-MM-dd}/{dateTo:yyyy-MM-dd}/{page}.{format}";
+
+        return await SendRequest(HttpMethod.Get, url, cancellationToken);
+    }
+
+    public async Task<ContextDto> GetAllEmployeeAsync(string key, CancellationToken cancellationToken, string format = "json")
+    {
+        string url = $"{_httpClient.BaseAddress?.OriginalString}/{key}/manager.{format}";
 
         return await SendRequest(HttpMethod.Get, url, cancellationToken);
     }

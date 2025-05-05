@@ -11,4 +11,9 @@ public interface IGatewayService
         CancellationToken cancellationToken,
         int page = 0,
         string format = "json");
+
+    public Task<ContextDto> GetAllEmployeeAsync(
+        string key,
+        CancellationToken cancellationToken,
+        string format = "json");
 }
