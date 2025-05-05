@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace RomanTourNotification.Application.Models.Gateway;
 
-public class Root
+public class RootRequests
 {
     [JsonPropertyName("requests")]
     public IEnumerable<Request> Requests { get; init; }
@@ -13,7 +13,7 @@ public class Root
     [JsonPropertyName("pages_all")]
     public int PagesAll { get; init; }
 
-    public Root(
+    public RootRequests(
         IEnumerable<Request> requests,
         string countAll,
         int pagesAll)

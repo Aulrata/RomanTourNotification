@@ -57,7 +57,7 @@ public class LoadDataService : ILoadDataService
             };
 
             int page = 1;
-            Root? root;
+            RootRequests? root;
 
             do
             {
@@ -73,7 +73,7 @@ public class LoadDataService : ILoadDataService
                     page);
 
                 // TODO DeserializeAsync
-                root = JsonSerializer.Deserialize<Root>(context.Stream, _jsonSerializerOptions);
+                root = JsonSerializer.Deserialize<RootRequests>(context.Stream, _jsonSerializerOptions);
 
                 if (root is null)
                     continue;
