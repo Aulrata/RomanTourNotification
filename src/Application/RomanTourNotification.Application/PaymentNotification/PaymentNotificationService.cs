@@ -67,6 +67,14 @@ public class PaymentNotificationService : IPaymentNotificationService
         var managerData = _groupings.Where(g => g.Key == managerFullname).ToList();
 
         _logger.LogInformation($"The formation of the message on payments of the manager has begun: {managerFullname}.");
+
+        if (managerData.Count == 0)
+        {
+            sb.Append("\nСегодня нет клиентов, которым надо выставлять счет\n");
+            _logger.LogInformation($"The formation of the message on payments of the manager has been completed: {managerFullname}.");
+            return;
+        }
+
         IGrouping<string, Request> requests = managerData.First();
 
         foreach (Request request in requests)
@@ -80,9 +88,6 @@ public class PaymentNotificationService : IPaymentNotificationService
                               """;
             sb.Append(message);
         }
-
-        if (managerData.Count == 0)
-            sb.Append("\nСегодня нет клиентов, которым надо выставлять счет\n");
 
         _logger.LogInformation($"The formation of the message on payments of the manager has been completed: {managerFullname}.");
     }
