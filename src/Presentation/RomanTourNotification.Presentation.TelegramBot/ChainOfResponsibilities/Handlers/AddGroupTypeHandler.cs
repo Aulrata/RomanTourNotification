@@ -1,17 +1,18 @@
-using RomanTourNotification.Application.Models.Users;
+using RomanTourNotification.Application.Extensions;
+using RomanTourNotification.Application.Models.Groups;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities.Handlers;
 
-public class ChooseRoleHandler : CommandHandler
+public class AddGroupTypeHandler : CommandHandler
 {
     public override async Task Handle(HandlerContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (context.Iterator.CurrentWord != "choose_role")
+        if (context.Iterator.CurrentWord != "add_group_type")
         {
             await base.Handle(context);
             return;
@@ -20,24 +21,16 @@ public class ChooseRoleHandler : CommandHandler
         var keyboard = new InlineKeyboardMarkup([
             [
                 InlineKeyboardButton.WithCallbackData(
-                    "Администратор",
-                    $"users choose_user show_user {context.Iterator.ObjectId} choose_role {(int)UserRole.Admin}"),
+                    $"{GroupType.Arrival.GetDescription()}",
+                    $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.Arrival}"),
                 InlineKeyboardButton.WithCallbackData(
-                    "Менеджер",
-                    $"users choose_user show_user {context.Iterator.ObjectId} choose_role {(int)UserRole.Manager}"),
-            ],
-            [
-                InlineKeyboardButton.WithCallbackData(
-                    "Не указана",
-                    $"users choose_user show_user {context.Iterator.ObjectId} choose_role {(int)UserRole.Unspecified}"),
-                InlineKeyboardButton.WithCallbackData(
-                    "Разработчик",
-                    $"users choose_user show_user {context.Iterator.ObjectId} choose_role {(int)UserRole.Developer}"),
+                    $"{GroupType.Payment.GetDescription()}",
+                    $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.Payment}"),
             ],
             [
                 InlineKeyboardButton.WithCallbackData(
                     "Назад",
-                    $"users choose_user show_user {context.Iterator.ObjectId}"),
+                    $"groups choose_group show_group {context.Iterator.ObjectId}"),
             ]
         ]);
 
@@ -45,17 +38,17 @@ public class ChooseRoleHandler : CommandHandler
         {
             context.Iterator.MoveNext();
 
-            await context.HandlerServices.UserService.UpdateUserRoleAsync(
+            await context.HandlerServices.GroupService.AddGroupTypeByIdAsync(
                 context.Iterator.ObjectId,
-                (UserRole)int.Parse(context.Iterator.CurrentWord),
+                (GroupType)int.Parse(context.Iterator.CurrentWord),
                 context.CancellationToken);
 
-            var backIterator = new Iterator($"users choose_user show_user {context.Iterator.ObjectId}");
+            var backIterator = new Iterator($"groups choose_group show_group {context.Iterator.ObjectId}");
 
             HandlerContext backContext = context with { Iterator = backIterator };
 
-            var userHandler = new UserHandler();
-            await userHandler.Handle(backContext);
+            var groupHandler = new GroupHandler();
+            await groupHandler.Handle(backContext);
         }
         else
         {
@@ -64,7 +57,7 @@ public class ChooseRoleHandler : CommandHandler
                 await context.BotClient.EditMessageText(
                     chatId: context.User.ChatId,
                     messageId: context.MessageId,
-                    text: "Выберите роль",
+                    text: "Выберите тип, который хотите добавить",
                     replyMarkup: keyboard,
                     cancellationToken: context.CancellationToken);
             }

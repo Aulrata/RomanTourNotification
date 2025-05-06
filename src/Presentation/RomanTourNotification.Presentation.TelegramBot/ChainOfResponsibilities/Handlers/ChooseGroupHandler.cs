@@ -1,17 +1,17 @@
-using RomanTourNotification.Application.Models.Users;
+using RomanTourNotification.Application.Models.Groups;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities.Handlers;
 
-public class ChooseUserHandler : CommandHandler
+public class ChooseGroupHandler : CommandHandler
 {
     public override async Task Handle(HandlerContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (context.Iterator.CurrentWord != "choose_user")
+        if (context.Iterator.CurrentWord != "choose_group")
         {
             await base.Handle(context);
             return;
@@ -21,24 +21,21 @@ public class ChooseUserHandler : CommandHandler
         {
             context.Iterator.MoveNext();
 
-            var showUserHandler = new ShowUserHandler();
+            var showGroupHandler = new ShowGroupHandler();
 
-            await showUserHandler.Handle(context);
+            await showGroupHandler.Handle(context);
         }
         else
         {
-            IAsyncEnumerable<User> users = context.HandlerServices.UserService.GetAllAsync(context.CancellationToken);
+            IEnumerable<Group> groups = await context.HandlerServices.GroupService.GetAllAsync(context.CancellationToken);
 
-            var keyboardButtons = new List<InlineKeyboardButton[]>();
-            await foreach (User? user in users.WithCancellation(context.CancellationToken))
-            {
-                var button = InlineKeyboardButton.WithCallbackData(
-                    $"{user.FirstName} {user.LastName}",
-                    $"users choose_user show_user {user.ChatId}");
-                keyboardButtons.Add([button]);
-            }
+            var keyboardButtons = groups.Select(group => InlineKeyboardButton.WithCallbackData(
+                    $"{group.Title}",
+                    $"groups choose_group show_group {group.Id}"))
+                .Select(button => (InlineKeyboardButton[])[button])
+                .ToList();
 
-            keyboardButtons.Add([InlineKeyboardButton.WithCallbackData("Назад", "users")]);
+            keyboardButtons.Add([InlineKeyboardButton.WithCallbackData("Назад", "groups")]);
 
             var keyboard = new InlineKeyboardMarkup(keyboardButtons);
 
@@ -47,7 +44,7 @@ public class ChooseUserHandler : CommandHandler
                 await context.BotClient.EditMessageText(
                     chatId: context.User.ChatId,
                     messageId: context.MessageId,
-                    text: "Выберите пользователя",
+                    text: "Выберите группу",
                     replyMarkup: keyboard,
                     cancellationToken: context.CancellationToken);
             }
@@ -55,7 +52,7 @@ public class ChooseUserHandler : CommandHandler
             {
                 await context.BotClient.SendMessage(
                     chatId: context.User.ChatId,
-                    text: "Выберите пользователя",
+                    text: "Выберите группу",
                     parseMode: ParseMode.Markdown,
                     replyMarkup: keyboard,
                     cancellationToken: context.CancellationToken);

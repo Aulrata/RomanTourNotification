@@ -24,13 +24,11 @@ public class UserAddHandler : CommandHandler
 
         if (context.MessageId != 0)
         {
-            if (context.User.Id is null)
-                return;
-
-            await context.BotClient.EditMessageReplyMarkup(
+            await context.BotClient.EditMessageText(
                 chatId: context.User.ChatId,
                 messageId: context.MessageId,
-                keyboard,
+                text: "Пока в разработке",
+                replyMarkup: keyboard,
                 cancellationToken: context.CancellationToken);
         }
         else

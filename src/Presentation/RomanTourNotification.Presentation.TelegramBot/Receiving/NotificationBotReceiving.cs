@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.Models.Groups;
@@ -17,6 +19,8 @@ public class NotificationBotReceiving
     private readonly ITelegramBotClient _botClient;
     private readonly IUserService _userService;
     private readonly IGroupService _groupService;
+    private readonly ILoadEmployees _loadEmployees;
+    private readonly ILogger<NotificationBotReceiving> _logger;
 
     // TODO Учесть усдалеие пользователей
     private readonly Dictionary<long, User> _users;
@@ -24,11 +28,15 @@ public class NotificationBotReceiving
     public NotificationBotReceiving(
         ITelegramBotClient botClient,
         IUserService userService,
-        IGroupService groupService)
+        IGroupService groupService,
+        ILogger<NotificationBotReceiving> logger,
+        ILoadEmployees loadEmployees)
     {
         _botClient = botClient;
         _userService = userService;
         _groupService = groupService;
+        _logger = logger;
+        _loadEmployees = loadEmployees;
         _users = [];
     }
 
@@ -43,7 +51,7 @@ public class NotificationBotReceiving
             cancellationToken: cancellationToken);
 
         Telegram.Bot.Types.User bot = await _botClient.GetMe(cancellationToken);
-        Console.WriteLine($"{bot.Username} started");
+        _logger.LogInformation($"{bot.Username} started");
     }
 
     private async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
@@ -129,7 +137,7 @@ public class NotificationBotReceiving
 
                 if (user is null)
                 {
-                    var newUser = new User(null, firstName ?? string.Empty, lastName ?? string.Empty, UserRole.Unspecified, userId, DateTime.Now);
+                    var newUser = new User(0, firstName ?? string.Empty, lastName ?? string.Empty, UserRole.Unspecified, userId, DateTime.Now);
                     long newUserId = await _userService.CreateAsync(newUser, cancellationToken);
 
                     user = await _userService.GetByChatIdAsync(newUserId, cancellationToken);
@@ -140,19 +148,24 @@ public class NotificationBotReceiving
 
                 value = user;
 
+                if (value.Role is UserRole.Unspecified)
+                    return;
+
                 _users.Add(userId, value);
             }
 
             var iterator = new Iterator(text);
-            var context = new HandlerContext(value, iterator, _botClient, cancellationToken, _userService, messageId);
+            var handlerServices = new HandlerServices(_userService, _groupService, _loadEmployees);
+            var context = new HandlerContext(value, iterator, _botClient, cancellationToken, handlerServices, messageId);
             var startHandler = new StartHandler();
             var userHandler = new UserHandler();
-            await startHandler.SetNext(userHandler);
+            var groupHandler = new GroupHandler();
+            await startHandler.SetNext(userHandler).Result.SetNext(groupHandler);
             await startHandler.Handle(context);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Bot Error: {ex.Message} ");
+            _logger.LogInformation($"Bot Error: {ex.Message} ");
         }
     }
 
@@ -168,20 +181,28 @@ public class NotificationBotReceiving
         long idFrom = chatMember.From.Id;
         string userNameFrom = chatMember.From.Username ?? "Нет данных";
 
-        var group = new Group(null, groupTitle, groupId, idFrom, GroupType.Unspecified, DateTime.Now);
+        User? user = await _userService.GetByChatIdAsync(idFrom, cancellationToken);
+
+        if (user is null)
+        {
+            _logger.LogError("Не удалось добавить группу. Пользователь, который добавлял в группу не найден в базе данных");
+            return;
+        }
+
+        var group = new Group(0, groupTitle, groupId, user.Id, string.Empty, GroupType.Unspecified, DateTime.Now);
 
         Group? addedGroup = await _groupService.AddAsync(group, cancellationToken);
 
         if (addedGroup is null)
         {
-            Console.WriteLine("Group already exists");
+            _logger.LogInformation("Group already exists");
             return;
         }
 
-        Console.WriteLine($"Пользователь {userNameFrom} добавил бота в группу {groupTitle}");
+        _logger.LogInformation($"Пользователь {userNameFrom} добавил бота в группу {groupTitle}");
 
         await _botClient.SendMessage(
-            group.GroupId,
+            group.ChatId,
             $"Пользователь {userNameFrom} добавил бота в группу {groupTitle}",
             cancellationToken: cancellationToken);
     }
@@ -192,10 +213,10 @@ public class NotificationBotReceiving
 
         if (deletedGroup == 0)
         {
-            Console.WriteLine("Group already deleted");
+            _logger.LogInformation("Group already deleted");
             return;
         }
 
-        Console.WriteLine($"Пользователь {chatMember.From.Username} удалил бота из группы {chatMember.Chat.Title}");
+        _logger.LogWarning($"Пользователь {chatMember.From.Username} удалил бота из группы {chatMember.Chat.Title}");
     }
 }

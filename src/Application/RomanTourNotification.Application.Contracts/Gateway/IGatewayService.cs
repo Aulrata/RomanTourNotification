@@ -8,6 +8,12 @@ public interface IGatewayService
         string key,
         DateTime dateFrom,
         DateTime dateTo,
+        CancellationToken cancellationToken,
         int page = 0,
+        string format = "json");
+
+    public Task<ContextDto> GetAllEmployeeAsync(
+        string key,
+        CancellationToken cancellationToken,
         string format = "json");
 }

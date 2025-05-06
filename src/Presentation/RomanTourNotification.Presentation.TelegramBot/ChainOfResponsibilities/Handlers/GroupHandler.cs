@@ -4,13 +4,13 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities.Handlers;
 
-public class UserHandler : CommandHandler
+public class GroupHandler : CommandHandler
 {
     public override async Task Handle(HandlerContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (context.Iterator.CurrentWord != "users")
+        if (context.Iterator.CurrentWord != "groups")
         {
             await base.Handle(context);
             return;
@@ -18,8 +18,7 @@ public class UserHandler : CommandHandler
 
         var keyboard = new InlineKeyboardMarkup([
             [
-                InlineKeyboardButton.WithCallbackData("Добавить пользователя", "users add_user"),
-                InlineKeyboardButton.WithCallbackData("Выбрать пользователя", "users choose_user")
+                InlineKeyboardButton.WithCallbackData("Выбрать группу", "groups choose_group")
             ],
             [
                 InlineKeyboardButton.WithCallbackData("Назад", "/start")
@@ -30,10 +29,8 @@ public class UserHandler : CommandHandler
         {
             context.Iterator.MoveNext();
 
-            var userAddHandler = new UserAddHandler();
-            var chooseUserHandler = new ChooseUserHandler();
-            await userAddHandler.SetNext(chooseUserHandler);
-            await userAddHandler.Handle(context);
+            var chooseGroupHandler = new ChooseGroupHandler();
+            await chooseGroupHandler.Handle(context);
         }
         else
         {

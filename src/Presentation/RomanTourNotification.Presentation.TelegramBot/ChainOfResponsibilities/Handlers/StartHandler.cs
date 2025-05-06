@@ -25,9 +25,6 @@ public class StartHandler : CommandHandler
 
         if (context.MessageId != 0)
         {
-            if (context.User.Id is null)
-                return;
-
             await context.BotClient.EditMessageReplyMarkup(
                 chatId: context.User.ChatId,
                 messageId: context.MessageId,

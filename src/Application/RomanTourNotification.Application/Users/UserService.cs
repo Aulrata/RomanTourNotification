@@ -25,7 +25,7 @@ public class UserService : IUserService
 
         // Доабвить логгер "User already exists.";
         if (oldUser is not null)
-            return oldUser.Id ?? 0;
+            return oldUser.Id;
 
         long userId = await _userRepository.CreateUserAsync(user, cancellationToken);
 

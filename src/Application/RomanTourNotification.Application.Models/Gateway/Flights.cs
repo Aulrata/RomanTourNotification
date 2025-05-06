@@ -26,4 +26,6 @@ public class Flights
         FlightsTypeId = flightsTypeId;
         FlightsType = (FlightsType)int.Parse(flightsTypeId);
     }
+
+    public DateTime? DateBeginAsDate => DateTime.TryParse(DateBegin, out DateTime result) ? result : null;
 }

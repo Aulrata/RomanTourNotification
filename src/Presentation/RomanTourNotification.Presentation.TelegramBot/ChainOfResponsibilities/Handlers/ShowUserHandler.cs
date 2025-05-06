@@ -42,7 +42,7 @@ public class ShowUserHandler : CommandHandler
         }
         else
         {
-            User? user = await context.UserService.GetByChatIdAsync(chatId, context.CancellationToken);
+            User? user = await context.HandlerServices.UserService.GetByChatIdAsync(chatId, context.CancellationToken);
 
             if (user is null)
                 return;
@@ -55,9 +55,6 @@ public class ShowUserHandler : CommandHandler
 
             if (context.MessageId != 0)
             {
-                if (context.User.Id is null)
-                    return;
-
                 await context.BotClient.EditMessageText(
                     chatId: context.User.ChatId,
                     messageId: context.MessageId,

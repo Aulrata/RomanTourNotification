@@ -1,7 +1,7 @@
 namespace RomanTourNotification.Application.Models.Users;
 
 public record User(
-    long? Id,
+    long Id,
     string FirstName,
     string? LastName,
     UserRole Role,
