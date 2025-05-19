@@ -111,8 +111,9 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         return requests
             .Where(r =>
                 r.DateBeginAsDate == targetDate ||
-                (r.DateBeginAsDate < targetDate &&
-                r.DateRequestAsDate?.AddDays(1) == dateDto.From))
+                (r.DateBeginAsDate < targetDate && r.DateRequestAsDate?.AddDays(1) == dateDto.From) ||
+                (r.DateBeginAsDate < targetDate && r.DateRequestAsDate?.AddDays(3) == dateDto.From && r.DateRequestAsDate?.DayOfWeek is DayOfWeek.Friday) ||
+                (r.DateBeginAsDate < targetDate && r.DateRequestAsDate?.AddDays(2) == dateDto.From && r.DateRequestAsDate?.DayOfWeek is DayOfWeek.Saturday))
             .DistinctBy(r => r.IdSystem);
     }
 
