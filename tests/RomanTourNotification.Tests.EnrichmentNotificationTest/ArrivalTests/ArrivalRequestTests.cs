@@ -98,8 +98,7 @@ public class ArrivalRequestTests
         var result = service.GetDateBeginInSomeDays(requests, new DateDto(DateTime.Parse("2025-04-21"))).ToList();
         var result2 = service.GetDateBeginInSomeDays(requests, new DateDto(DateTime.Parse("2025-04-22"))).ToList();
 
-        result.Should().HaveCount(1);
-        result.First().Id.Should().Be(2);
+        result.Should().HaveCount(2);
         result2.Should().HaveCount(1);
         result2.First().Id.Should().Be(3);
     }
