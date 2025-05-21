@@ -20,7 +20,7 @@ public class ShowUserHandler : CommandHandler
 
         context.Iterator.MoveNext();
 
-        long chatId = long.Parse(context.Iterator.CurrentWord);
+        int chatId = int.Parse(context.Iterator.CurrentWord);
 
         context.Iterator.ObjectId = chatId;
 
