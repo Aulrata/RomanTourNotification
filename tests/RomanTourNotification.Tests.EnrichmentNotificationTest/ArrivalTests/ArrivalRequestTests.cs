@@ -21,9 +21,10 @@ public class ArrivalRequestTests
     {
         IEnumerable<Request> requests = TestData.GetRequests();
 
-        EnrichmentNotificationService service = TestData.GetEnrichmentService();
+        FilterEnrichmentNotificationService filter = TestData.GetFilterEnrichmentService();
+        filter.SetData(new DateDto(DateTime.Parse("2025-04-28")), requests);
 
-        var result = service.GetEndTomorrow(requests, new DateDto(DateTime.Parse("2025-04-28"))).ToList();
+        var result = filter.GetEndTomorrow().ToList();
 
         result.Should().HaveCount(1);
         result.First().Id.Should().Be(1);
@@ -34,9 +35,9 @@ public class ArrivalRequestTests
     {
         IEnumerable<Request> requests = TestData.GetRequests();
 
-        EnrichmentNotificationService service = TestData.GetEnrichmentService();
-
-        var result = service.GetBeginTomorrow(requests, new DateDto(DateTime.Parse("2025-04-24"))).ToList();
+        FilterEnrichmentNotificationService filter = TestData.GetFilterEnrichmentService();
+        filter.SetData(new DateDto(DateTime.Parse("2025-04-24")), requests);
+        var result = filter.GetBeginTomorrow().ToList();
 
         result.Should().HaveCount(1);
 
@@ -48,11 +49,12 @@ public class ArrivalRequestTests
     {
         IEnumerable<Request> requests = TestData.GetRequests();
 
-        EnrichmentNotificationService service = TestData.GetEnrichmentService();
+        FilterEnrichmentNotificationService filter = TestData.GetFilterEnrichmentService();
+        filter.SetData(new DateDto(DateTime.Parse("2025-04-22")), requests);
 
-        var result = service.GetDateBeginInSomeDays(requests, new DateDto(DateTime.Parse("2025-04-22"))).ToList();
+        var result = filter.GetDateBeginInSomeDays().ToList();
 
-        result.Should().HaveCount(3);
+        result.Should().HaveCount(2);
 
         // result.First().Id.Should().Be(1);
     }
@@ -83,7 +85,10 @@ public class ArrivalRequestTests
 
         EnrichmentNotificationService service = TestData.GetEnrichmentService();
 
-        var result = service.GetBeginTomorrow(requests, new DateDto(DateTime.Parse("2025-04-19"))).ToList();
+        FilterEnrichmentNotificationService filter = TestData.GetFilterEnrichmentService();
+        filter.SetData(new DateDto(DateTime.Parse("2025-04-19")), requests);
+
+        var result = filter.GetBeginTomorrow().ToList();
 
         result.Should().HaveCount(0);
     }
@@ -95,8 +100,13 @@ public class ArrivalRequestTests
 
         EnrichmentNotificationService service = TestData.GetEnrichmentService();
 
-        var result = service.GetDateBeginInSomeDays(requests, new DateDto(DateTime.Parse("2025-04-21"))).ToList();
-        var result2 = service.GetDateBeginInSomeDays(requests, new DateDto(DateTime.Parse("2025-04-22"))).ToList();
+        FilterEnrichmentNotificationService filter = TestData.GetFilterEnrichmentService();
+        filter.SetData(new DateDto(DateTime.Parse("2025-04-21")), requests);
+
+        var result = filter.GetDateBeginInSomeDays().ToList();
+
+        filter.SetData(new DateDto(DateTime.Parse("2025-04-22")), requests);
+        var result2 = filter.GetDateBeginInSomeDays().ToList();
 
         result.Should().HaveCount(2);
         result2.Should().HaveCount(1);

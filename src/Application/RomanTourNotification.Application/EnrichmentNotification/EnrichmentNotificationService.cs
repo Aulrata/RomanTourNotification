@@ -15,24 +15,27 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
     private readonly ILogger<EnrichmentNotificationService> _logger;
     private readonly ILoadDataService _loadDataService;
 
+    private readonly IFilterEnrichmentNotificationService _filterEnrichmentNotificationService;
+
     public EnrichmentNotificationService(
         ILogger<EnrichmentNotificationService> logger,
-        ILoadDataService loadDataService)
+        ILoadDataService loadDataService,
+        IFilterEnrichmentNotificationService filterEnrichmentNotificationService)
     {
         _logger = logger;
         _loadDataService = loadDataService;
+        _filterEnrichmentNotificationService = filterEnrichmentNotificationService;
     }
 
-    public async Task<string> GetArrivalByDateAsync(DateDto dateDto, CancellationToken cancellationToken)
+    public async Task GetArrivalByDateAsync(DateDto dateDto, StringBuilder sb, CancellationToken cancellationToken)
     {
         IEnumerable<LoadedData> loadedData = await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
 
-        StringBuilder sb = new();
         string greetings = $"""
-                            Доброе утро!
-                           Выписка документов на {dateDto.From.Date:dd.MM.yyyy}.
-                           
-                           """;
+                             Доброе утро!
+                            Выписка документов на {dateDto.From.Date:dd.MM.yyyy}.
+
+                            """;
         sb.AppendLine(greetings);
 
         foreach (LoadedData loadData in loadedData)
@@ -40,15 +43,13 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
             if (loadData.Requests is null)
                 continue;
 
-            var dataRequests = loadData.Requests
-                .Where(x => x.Status is not RequestStatus.Cancelled)
-                .ToList();
+            _filterEnrichmentNotificationService.SetData(dateDto, loadData.Requests);
 
             _logger.LogInformation("Start combine notify message");
 
-            var dateBeginInSomeDays = GetDateBeginInSomeDays(dataRequests, dateDto).ToList();
-            var dateBeginTomorrow = GetBeginTomorrow(dataRequests, dateDto).ToList();
-            var dateEndTomorrow = GetEndTomorrow(dataRequests, dateDto).ToList();
+            var dateBeginInSomeDays = _filterEnrichmentNotificationService.GetDateBeginInSomeDays().ToList();
+            var dateBeginTomorrow = _filterEnrichmentNotificationService.GetBeginTomorrow().ToList();
+            var dateEndTomorrow = _filterEnrichmentNotificationService.GetEndTomorrow().ToList();
 
             if (dateBeginInSomeDays.Count == 0
                 && dateBeginTomorrow.Count == 0
@@ -66,69 +67,6 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
         if (sb.Length < 15)
             sb.AppendLine("Документов на отправку нет\n");
-
-        return sb.ToString();
-    }
-
-    public IEnumerable<Request> GetEndTomorrow(IEnumerable<Request> requests, DateDto dateDto)
-    {
-        DateTime tomorrow = dateDto.From.AddDays(1).Date;
-
-        return requests
-            .Where(r => r.Services.
-                Any(s => s is { InformationServiceType: InformationServiceType.AirTicket } &&
-                         s.Flights.Any(f => f.FlightsType == FlightsType.Charter)))
-            .Where(r =>
-            {
-                InformationServices airTicketService = r.Services.
-                    First(s => s.InformationServiceType == InformationServiceType.AirTicket);
-
-                IEnumerable<Flights> charterFlights = airTicketService.Flights
-                    .Where(f => f.FlightsType == FlightsType.Charter);
-
-                IEnumerable<Flights> flightsWithDates = charterFlights
-                    .Where(f => f.DateBeginAsDate is not null)
-                    .ToList();
-
-                var flightsWithLaterDates = flightsWithDates
-                    .Where(f1 =>
-                        flightsWithDates
-                            .Any(f2 => f2.DateBeginAsDate?.AddDays(2) < f1.DateBeginAsDate))
-                    .ToList();
-
-                if (flightsWithLaterDates.Count == 0) return false;
-
-                Flights? minLaterFlight = flightsWithLaterDates.MinBy(f => f.DateBeginAsDate);
-
-                return minLaterFlight?.DateBeginAsDate == tomorrow;
-            });
-    }
-
-    public IEnumerable<Request> GetDateBeginInSomeDays(IEnumerable<Request> requests, DateDto dateDto)
-    {
-        DateTime targetDate = dateDto.From.AddDays(dateDto.Days).Date;
-
-        return requests
-            .Where(r =>
-                r.DateBeginAsDate == targetDate ||
-                (r.DateBeginAsDate < targetDate && r.DateRequestAsDate?.AddDays(1) == dateDto.From) ||
-                (r.DateBeginAsDate < targetDate && r.DateRequestAsDate?.AddDays(3) == dateDto.From && r.DateRequestAsDate?.DayOfWeek is DayOfWeek.Friday) ||
-                (r.DateBeginAsDate < targetDate && r.DateRequestAsDate?.AddDays(2) == dateDto.From && r.DateRequestAsDate?.DayOfWeek is DayOfWeek.Saturday))
-            .DistinctBy(r => r.IdSystem);
-    }
-
-    public IEnumerable<Request> GetBeginTomorrow(IEnumerable<Request> requests, DateDto dateDto)
-    {
-        DateTime tomorrow = dateDto.From.AddDays(1).Date;
-
-        return requests
-            .Where(r => r.DateBeginAsDate == tomorrow &&
-                r.Services?
-                    .Any(s =>
-                        s.InformationServiceType == InformationServiceType.AirTicket &&
-                        s.Flights
-                            .Any(f => f.FlightsType == FlightsType.Charter)) == true)
-            .DistinctBy(r => r.IdSystem);
     }
 
     private void FillDocuments(StringBuilder sb, List<Request> requests)
@@ -166,7 +104,8 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
     private string GetRequestInformation(Request request)
     {
-        InformationServices? airTickerService = request.Services.FirstOrDefault(s => s.InformationServiceType == InformationServiceType.AirTicket);
+        InformationServices? airTickerService =
+            request.Services.FirstOrDefault(s => s.InformationServiceType == InformationServiceType.AirTicket);
         FlightsType flightType = airTickerService?.Flights.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified;
 
         string type = flightType.GetDescription();

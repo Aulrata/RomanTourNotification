@@ -24,20 +24,42 @@ public class PaymentNotificationService : IPaymentNotificationService
         _groupings = [];
     }
 
-    public async Task GetAllPaymentMessagesAsync(DateDto dateDto, StringBuilder sb, CancellationToken cancellationToken)
+    public async Task GetPaymentMessageAsync(
+        DateDto currentDay,
+        StringBuilder sb,
+        string managerFullname,
+        CancellationToken cancellationToken)
     {
-        if (_lastUpdateDate != dateDto.From.Date)
-            await LoadPaymentDataAsync(dateDto, cancellationToken);
+        if (_lastUpdateDate != currentDay.From.Date)
+            await LoadPaymentDataAsync(currentDay, cancellationToken);
 
+        if (!string.IsNullOrEmpty(managerFullname))
+            GetPaymentMessageByManagerAsync(sb, managerFullname, cancellationToken);
+        else
+            GetAllPaymentMessagesAsync(sb, cancellationToken);
+    }
+
+    private void GetAllPaymentMessagesAsync(StringBuilder sb, CancellationToken cancellationToken)
+    {
         var managerData = _groupings.ToList();
 
         _logger.LogInformation("The formation of a message for all payments has begun.");
+
+        if (managerData.Count == 0)
+        {
+            sb.Append("Сегодня нет клиентов, которым надо выставлять счет\n");
+            _logger.LogInformation("There are no clients to invoice today.");
+            return;
+        }
 
         foreach (IGrouping<string, Request> requests in managerData)
         {
             sb.Append($"\n{requests.Key}\n");
             foreach (Request request in requests)
             {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
                 string message = $"""
 
                                   Id: {request.IdSystem}, 
@@ -49,21 +71,14 @@ public class PaymentNotificationService : IPaymentNotificationService
             }
         }
 
-        if (managerData.Count == 0)
-            sb.Append("Сегодня нет клиентов, которым надо выставлять счет\n");
-
         _logger.LogInformation("Generation of messages for all payments has been completed.");
     }
 
-    public async Task GetPaymentMessageByManagerAsync(
-        DateDto dateDto,
+    private void GetPaymentMessageByManagerAsync(
         StringBuilder sb,
         string managerFullname,
         CancellationToken cancellationToken)
     {
-        if (_lastUpdateDate != dateDto.From.Date)
-            await LoadPaymentDataAsync(dateDto, cancellationToken);
-
         var managerData = _groupings.Where(g => g.Key == managerFullname).ToList();
 
         _logger.LogInformation($"The formation of the message on payments of the manager has begun: {managerFullname}.");
@@ -71,7 +86,7 @@ public class PaymentNotificationService : IPaymentNotificationService
         if (managerData.Count == 0)
         {
             sb.Append("\nСегодня нет клиентов, которым надо выставлять счет\n");
-            _logger.LogInformation($"The formation of the message on payments of the manager has been completed: {managerFullname}.");
+            _logger.LogInformation($"There are no clients to invoice today for: {managerFullname}.");
             return;
         }
 
@@ -79,6 +94,9 @@ public class PaymentNotificationService : IPaymentNotificationService
 
         foreach (Request request in requests)
         {
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
             string message = $"""
 
                               Id: {request.IdSystem}, 

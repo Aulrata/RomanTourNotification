@@ -14,17 +14,17 @@ public class Flights
     public string DateEnd { get; init; }
 
     [JsonPropertyName("type_id")]
-    public string FlightsTypeId { get; init; }
+    public string? FlightsTypeId { get; init; }
 
     public FlightsType FlightsType { get; init; }
 
-    public Flights(int id, string dateBegin, string dateEnd, string flightsTypeId)
+    public Flights(int id, string dateBegin, string dateEnd, string? flightsTypeId)
     {
         Id = id;
         DateBegin = dateBegin;
         DateEnd = dateEnd;
         FlightsTypeId = flightsTypeId;
-        FlightsType = (FlightsType)int.Parse(flightsTypeId);
+        FlightsType = (FlightsType)int.Parse(flightsTypeId ?? "0");
     }
 
     public DateTime? DateBeginAsDate => DateTime.TryParse(DateBegin, out DateTime result) ? result : null;

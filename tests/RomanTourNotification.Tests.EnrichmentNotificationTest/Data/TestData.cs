@@ -16,9 +16,18 @@ public static class TestData
         IEnumerable<ApiSettings> api = [new()];
         IGatewayService gateway = new GatewayService(new HttpClient(), new Logger<GatewayService>(new LoggerFactory()));
 
-        ILoadDataService loadDataService = new LoadDataService(gateway, new Logger<LoadDataService>(new LoggerFactory()), api);
+        ILoadDataService loadDataService =
+            new LoadDataService(gateway, new Logger<LoadDataService>(new LoggerFactory()), api);
 
-        return new EnrichmentNotificationService(new Logger<EnrichmentNotificationService>(new LoggerFactory()), loadDataService);
+        return new EnrichmentNotificationService(
+            new Logger<EnrichmentNotificationService>(new LoggerFactory()),
+            loadDataService,
+            new FilterEnrichmentNotificationService());
+    }
+
+    public static FilterEnrichmentNotificationService GetFilterEnrichmentService()
+    {
+        return new FilterEnrichmentNotificationService();
     }
 
     public static IEnumerable<Request> GetRequests()
