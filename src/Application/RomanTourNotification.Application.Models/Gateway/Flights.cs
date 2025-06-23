@@ -24,7 +24,7 @@ public class Flights
         DateBegin = dateBegin;
         DateEnd = dateEnd;
         FlightsTypeId = flightsTypeId;
-        FlightsType = (FlightsType)int.Parse(flightsTypeId);
+        FlightsType = (FlightsType)int.Parse(flightsTypeId ?? "0");
     }
 
     public DateTime? DateBeginAsDate => DateTime.TryParse(DateBegin, out DateTime result) ? result : null;
