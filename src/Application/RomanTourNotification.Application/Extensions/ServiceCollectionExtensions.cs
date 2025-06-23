@@ -6,12 +6,16 @@ using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
 using RomanTourNotification.Application.Contracts.Gateway;
 using RomanTourNotification.Application.Contracts.Groups;
+using RomanTourNotification.Application.Contracts.Messages;
+using RomanTourNotification.Application.Contracts.NotificationService;
 using RomanTourNotification.Application.Contracts.PaymentNotification;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.DownloadData;
 using RomanTourNotification.Application.EnrichmentNotification;
 using RomanTourNotification.Application.Groups;
+using RomanTourNotification.Application.Messages;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
+using RomanTourNotification.Application.NotificationService;
 using RomanTourNotification.Application.PaymentNotification;
 using RomanTourNotification.Application.Users;
 
@@ -21,8 +25,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection collection)
     {
-        collection.AddSingleton<IUserService, UserService>();
-        collection.AddSingleton<IGroupService, GroupService>();
+        collection.AddScoped<IUserService, UserService>();
+        collection.AddScoped<IGroupService, GroupService>();
         collection.AddScoped<ILoadDataService, LoadDataService>(p =>
         {
             IEnumerable<ApiSettings> apiSettings = p.GetRequiredService<IOptions<List<ApiSettings>>>().Value;
@@ -42,8 +46,10 @@ public static class ServiceCollectionExtensions
         });
 
         collection.AddScoped<IPaymentNotificationService, PaymentNotificationService>();
-
         collection.AddScoped<IEnrichmentNotificationService, EnrichmentNotificationService>();
+        collection.AddScoped<INotificationService, TelegramService>();
+        collection.AddScoped<IMessageHandlerService, MessageHandlerService>();
+        collection.AddScoped<IFilterEnrichmentNotificationService, FilterEnrichmentNotificationService>();
         return collection;
     }
 
