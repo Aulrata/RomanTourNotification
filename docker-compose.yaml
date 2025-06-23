@@ -2,15 +2,18 @@ services:
   postgres:
     image: postgres:latest
     container_name: postgres-db
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: rCYNwMBn8I%p0Hizbec52K~Py?jbB@tS
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+#    user: "1000:1000"
+    networks:
+      - internal
     healthcheck:
       test: [ "CMD", "pg_isready", "-h", "postgres", "-U", "postgres" ]
       interval: 2s
@@ -19,26 +22,28 @@ services:
   app:
     image: ghcr.io/aulrata/romantour-notification:latest
     container_name: romantour-app
-    restart: always
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
     environment:
       Infrastructure__Persistence__Postgres__Host: postgres
       Infrastructure__Persistence__Postgres__Database: postgres
       Infrastructure__Persistence__Postgres__Username: postgres
-      Infrastructure__Persistence__Postgres__Password: postgres
+      Infrastructure__Persistence__Postgres__Password: rCYNwMBn8I%p0Hizbec52K~Py?jbB@tS
       Infrastructure__Persistence__Postgres__Port: 5432
+    networks:
+      - internal
 
 volumes:
   postgres_data:
 
-#networks:
-#  default:
-#    driver: bridge
-#    driver_opts:
-#      com.docker.network.driver.mtu: 1450
+networks:
+  internal:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1450
