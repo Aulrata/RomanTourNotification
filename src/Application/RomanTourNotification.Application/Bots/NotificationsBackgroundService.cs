@@ -47,7 +47,7 @@ public class NotificationsBackgroundService : BackgroundService
             }
             finally
             {
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
             }
         }
     }
