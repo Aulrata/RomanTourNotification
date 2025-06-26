@@ -83,8 +83,6 @@ public class ArrivalRequestTests
 
         var requests = new List<Request> { requestWithoutServices };
 
-        EnrichmentNotificationService service = TestData.GetEnrichmentService();
-
         FilterEnrichmentNotificationService filter = TestData.GetFilterEnrichmentService();
         filter.SetData(new DateDto(DateTime.Parse("2025-04-19")), requests);
 
@@ -98,8 +96,6 @@ public class ArrivalRequestTests
     {
         IEnumerable<Request> requests = TestData.GetInSomeDaysLessTarget().ToList();
 
-        EnrichmentNotificationService service = TestData.GetEnrichmentService();
-
         FilterEnrichmentNotificationService filter = TestData.GetFilterEnrichmentService();
         filter.SetData(new DateDto(DateTime.Parse("2025-04-21")), requests);
 
@@ -111,5 +107,18 @@ public class ArrivalRequestTests
         result.Should().HaveCount(2);
         result2.Should().HaveCount(1);
         result2.First().Id.Should().Be(3);
+    }
+
+    [Fact]
+    public void Request_ShouldHaveBlockOfSeats()
+    {
+        IEnumerable<Request> requests = TestData.GetBlockOfSeats().ToList();
+
+        FilterEnrichmentNotificationService filter = TestData.GetFilterEnrichmentService();
+        filter.SetData(new DateDto(DateTime.Parse("2025-04-23")), requests);
+
+        var result = filter.GetBeginTomorrow().ToList();
+
+        result.Should().HaveCount(2);
     }
 }
