@@ -34,6 +34,16 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
     public IEnumerable<Request> GetBeginTomorrow()
     {
         DateTime tomorrow = _dateDto.From.AddDays(1).Date;
+        DateTime blockOfSeatsDate = _dateDto.From.AddDays(2).Date;
+
+        IEnumerable<Request> result = _requests
+            .Where(r => r.DateBeginAsDate == blockOfSeatsDate &&
+                        r.Services?
+                            .Any(s =>
+                                s.InformationServiceType == InformationServiceType.AirTicket &&
+                                s.Flights
+                                    .Any(f =>
+                                        f.FlightsType == FlightsType.BlockOfSeats)) == true);
 
         return _requests
             .Where(r => r.DateBeginAsDate == tomorrow &&
@@ -42,6 +52,7 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
                                 s.InformationServiceType == InformationServiceType.AirTicket &&
                                 s.Flights
                                     .Any(f => f.FlightsType == FlightsType.Charter)) == true)
+            .Concat(result)
             .DistinctBy(r => r.IdSystem);
     }
 
