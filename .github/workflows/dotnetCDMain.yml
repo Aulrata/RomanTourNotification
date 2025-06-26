@@ -1,4 +1,4 @@
-name: CI .NET
+name: CD main .NET
 
 on:
   push:
