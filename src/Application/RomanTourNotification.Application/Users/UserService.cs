@@ -26,9 +26,11 @@ public class UserService : IUserService
 
         User? oldUser = await _userRepository.GetUserByChatIdAsync(user.ChatId, cancellationToken);
 
-        // TODO Доабвить логгер "User already exists.";
         if (oldUser is not null)
+        {
+            _logger.LogInformation("User already exists.");
             return oldUser.Id;
+        }
 
         long userId = await _userRepository.CreateUserAsync(user, cancellationToken);
 
