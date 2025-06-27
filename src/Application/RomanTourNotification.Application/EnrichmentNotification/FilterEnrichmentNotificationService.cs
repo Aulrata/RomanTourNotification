@@ -74,7 +74,7 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
             InformationServices? currentFlight = flights
                 .Where(f => f.Flights
                     .Any(f2 => f2.DateEndAsDate?.Date > blockOfSeatsDate))
-                .Min();
+                .MinBy(f => f.Flights.FirstOrDefault()?.DateBeginAsDate);
 
             int? countOfRoutes = currentFlight?.Flights.Count();
 
