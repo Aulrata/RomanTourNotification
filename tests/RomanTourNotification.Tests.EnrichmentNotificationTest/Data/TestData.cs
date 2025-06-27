@@ -217,6 +217,7 @@ public static class TestData
     {
         var flight1 = new Flights(1, "2025-04-25", "2025-04-25", string.Empty, "Блок мест");
         var flight2 = new Flights(2, "2025-04-24", "2025-04-30", "2", string.Empty);
+        var flight3 = new Flights(3, "2025-04-29", "2025-04-30", string.Empty, "Блок мест");
 
         var service1 = new InformationServices(
             1,
@@ -224,7 +225,7 @@ public static class TestData
             string.Empty,
             string.Empty,
             6,
-            [flight1]);
+            [flight1, flight3]);
 
         var service2 = new InformationServices(
             1,

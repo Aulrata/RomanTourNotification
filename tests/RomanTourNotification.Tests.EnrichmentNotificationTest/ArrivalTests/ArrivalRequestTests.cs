@@ -110,7 +110,7 @@ public class ArrivalRequestTests
     }
 
     [Fact]
-    public void Request_ShouldHaveBlockOfSeats()
+    public void Request_ShouldHaveBlockOfSeats_StartTomorrow()
     {
         IEnumerable<Request> requests = TestData.GetBlockOfSeats().ToList();
 
@@ -120,5 +120,18 @@ public class ArrivalRequestTests
         var result = filter.GetBeginTomorrow().ToList();
 
         result.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Request_ShouldHaveBlockOfSeats_EndTomorrow()
+    {
+        IEnumerable<Request> requests = TestData.GetBlockOfSeats().ToList();
+
+        FilterEnrichmentNotificationService filter = TestData.GetFilterEnrichmentService();
+        filter.SetData(new DateDto(DateTime.Parse("2025-04-27")), requests);
+
+        var result = filter.GetEndTomorrow().ToList();
+
+        result.Should().HaveCount(1);
     }
 }

@@ -33,6 +33,8 @@ public class Flights
 
     public DateTime? DateBeginAsDate => DateTime.TryParse(DateBegin, out DateTime result) ? result : null;
 
+    public DateTime? DateEndAsDate => DateTime.TryParse(DateEnd, out DateTime result) ? result : null;
+
     private FlightsType MapperFlightsType(string flightsType)
     {
         return flightsType.ToLower() switch
