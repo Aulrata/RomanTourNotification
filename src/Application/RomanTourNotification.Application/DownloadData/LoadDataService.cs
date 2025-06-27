@@ -30,6 +30,7 @@ public class LoadDataService : ILoadDataService
         {
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Converters = { new FlightsTypeConverter() },
         };
         _loadedData = [];
     }
