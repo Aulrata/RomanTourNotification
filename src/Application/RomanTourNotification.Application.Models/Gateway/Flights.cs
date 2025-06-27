@@ -16,19 +16,29 @@ public class Flights
     [JsonPropertyName("type_id")]
     public string FlightsTypeId { get; init; }
 
-    [JsonPropertyName("type")]
-    [JsonConverter(typeof(FlightsTypeConverter))]
     public FlightsType FlightsType { get; init; }
 
-    [JsonConstructor]
-    public Flights(int id, string dateBegin, string dateEnd, string flightsTypeId, FlightsType flightsType)
+    [JsonPropertyName("type")]
+    public string FlightsTypeString { get; init; }
+
+    public Flights(int id, string dateBegin, string dateEnd, string flightsTypeId, string flightsTypeString)
     {
         Id = id;
         DateBegin = dateBegin;
         DateEnd = dateEnd;
         FlightsTypeId = flightsTypeId;
-        FlightsType = flightsType;
+        FlightsType = string.IsNullOrEmpty(flightsTypeString) ? (FlightsType)int.Parse(flightsTypeId ?? "0") : MapperFlightsType(flightsTypeString);
+        FlightsTypeString = flightsTypeString;
     }
 
     public DateTime? DateBeginAsDate => DateTime.TryParse(DateBegin, out DateTime result) ? result : null;
+
+    private FlightsType MapperFlightsType(string flightsType)
+    {
+        return flightsType.ToLower() switch
+        {
+            "блок мест" => FlightsType.BlockOfSeats,
+            _ => FlightsType.Unspecified,
+        };
+    }
 }
