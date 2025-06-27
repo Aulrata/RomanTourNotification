@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Reflection;
 
-namespace RomanTourNotification.Application.Extensions;
+namespace RomanTourNotification.Application.Models.Extensions;
 
 public static class EnumExtensions
 {

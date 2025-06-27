@@ -34,6 +34,16 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
     public IEnumerable<Request> GetBeginTomorrow()
     {
         DateTime tomorrow = _dateDto.From.AddDays(1).Date;
+        DateTime blockOfSeatsDate = _dateDto.From.AddDays(2).Date;
+
+        IEnumerable<Request> result = _requests
+            .Where(r => r.DateBeginAsDate == blockOfSeatsDate &&
+                        r.Services?
+                            .Any(s =>
+                                s.InformationServiceType == InformationServiceType.AirTicket &&
+                                s.Flights
+                                    .Any(f =>
+                                        f.FlightsType == FlightsType.BlockOfSeats)) == true);
 
         return _requests
             .Where(r => r.DateBeginAsDate == tomorrow &&
@@ -42,21 +52,52 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
                                 s.InformationServiceType == InformationServiceType.AirTicket &&
                                 s.Flights
                                     .Any(f => f.FlightsType == FlightsType.Charter)) == true)
+            .Concat(result)
             .DistinctBy(r => r.IdSystem);
     }
 
     public IEnumerable<Request> GetEndTomorrow()
     {
         DateTime tomorrow = _dateDto.From.AddDays(1).Date;
+        DateTime blockOfSeatsDate = _dateDto.From.AddDays(2).Date;
 
-        return _requests
-            .Where(r => r.Services.
-                Any(s => s is { InformationServiceType: InformationServiceType.AirTicket } &&
-                         s.Flights.Any(f => f.FlightsType == FlightsType.Charter)))
+        var blockOfSeatsRequests = new List<Request>();
+
+        foreach (Request request in _requests)
+        {
+            if (request.Services.All(s => s.InformationServiceType is not InformationServiceType.AirTicket))
+                continue;
+
+            IEnumerable<InformationServices> flights = request.Services
+                .Where(s => s.InformationServiceType == InformationServiceType.AirTicket);
+
+            InformationServices? currentFlight = flights
+                .Where(f => f.Flights
+                    .Any(f2 => f2.DateEndAsDate?.Date > blockOfSeatsDate))
+                .MinBy(f => f.Flights.FirstOrDefault()?.DateBeginAsDate);
+
+            int? countOfRoutes = currentFlight?.Flights.Count();
+
+            var flightsList = currentFlight?.Flights.ToList();
+
+            switch (countOfRoutes)
+            {
+                case 2:
+                    if (flightsList?[1].DateBeginAsDate == blockOfSeatsDate && flightsList[1].FlightsType == FlightsType.BlockOfSeats) blockOfSeatsRequests.Add(request);
+                    break;
+                case 4:
+                    if (flightsList?[2].DateBeginAsDate == blockOfSeatsDate && flightsList[2].FlightsType == FlightsType.BlockOfSeats) blockOfSeatsRequests.Add(request);
+                    break;
+            }
+        }
+
+        IEnumerable<Request> charterRequests = _requests
+            .Where(r => r.Services.Any(s => s is { InformationServiceType: InformationServiceType.AirTicket } &&
+                                            s.Flights.Any(f => f.FlightsType == FlightsType.Charter)))
             .Where(r =>
             {
-                InformationServices airTicketService = r.Services.
-                    First(s => s.InformationServiceType == InformationServiceType.AirTicket);
+                InformationServices airTicketService =
+                    r.Services.First(s => s.InformationServiceType == InformationServiceType.AirTicket);
 
                 IEnumerable<Flights> charterFlights = airTicketService.Flights
                     .Where(f => f.FlightsType == FlightsType.Charter);
@@ -77,5 +118,7 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
 
                 return minLaterFlight?.DateBeginAsDate == tomorrow;
             });
+
+        return blockOfSeatsRequests.Concat(charterRequests);
     }
 }

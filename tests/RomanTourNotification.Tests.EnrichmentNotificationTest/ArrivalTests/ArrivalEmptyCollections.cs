@@ -83,7 +83,8 @@ public class ArrivalEmptyCollections
             1,
             "2023-03-01",
             "2023-03-02",
-            "invalid");
+            "invalid",
+            string.Empty);
 
         createFlightWithInvalidTypeId.Should().Throw<FormatException>();
     }
@@ -171,8 +172,8 @@ public class ArrivalEmptyCollections
     [Fact]
     public void Requests_FlightsWithSameDates_ShouldHandleCorrectly()
     {
-        var flight1 = new Flights(1, "2023-06-01", "2023-06-02", "1");
-        var flight2 = new Flights(2, "2023-06-01", "2023-06-02", "2");
+        var flight1 = new Flights(1, "2023-06-01", "2023-06-02", "1", string.Empty);
+        var flight2 = new Flights(2, "2023-06-01", "2023-06-02", "2", string.Empty);
 
         var service = new InformationServices(
             5,

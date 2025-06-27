@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
-using RomanTourNotification.Application.Extensions;
 using RomanTourNotification.Application.Models.DownloadData;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
+using RomanTourNotification.Application.Models.Extensions;
 using RomanTourNotification.Application.Models.Gateway;
 using System.Net;
 using System.Text;

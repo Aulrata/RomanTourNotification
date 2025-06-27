@@ -32,10 +32,10 @@ public static class TestData
 
     public static IEnumerable<Request> GetRequests()
     {
-        var flight1 = new Flights(1, "2025-04-25", "2025-04-25", "2");
-        var flight2 = new Flights(2, "2025-04-25", "2025-04-26", "2");
-        var flight3 = new Flights(3, "2025-04-29", "2025-04-29", "2");
-        var flight4 = new Flights(4, "2025-04-29", "2025-04-30", "2");
+        var flight1 = new Flights(1, "2025-04-25", "2025-04-25", "2", string.Empty);
+        var flight2 = new Flights(2, "2025-04-25", "2025-04-26", "2", string.Empty);
+        var flight3 = new Flights(3, "2025-04-29", "2025-04-29", "2", string.Empty);
+        var flight4 = new Flights(4, "2025-04-29", "2025-04-30", "2", string.Empty);
 
         var service1 = new InformationServices(
             1,
@@ -211,5 +211,87 @@ public static class TestData
             string.Empty);
 
         return new List<Request> { request1, request2, request3, request4, request5 };
+    }
+
+    public static IEnumerable<Request> GetBlockOfSeats()
+    {
+        var flight1 = new Flights(1, "2025-04-25", "2025-04-25", string.Empty, "Блок мест");
+        var flight2 = new Flights(2, "2025-04-24", "2025-04-30", "2", string.Empty);
+        var flight3 = new Flights(3, "2025-04-29", "2025-04-30", string.Empty, "Блок мест");
+
+        var service1 = new InformationServices(
+            1,
+            1,
+            string.Empty,
+            string.Empty,
+            6,
+            [flight1, flight3]);
+
+        var service2 = new InformationServices(
+            1,
+            1,
+            string.Empty,
+            string.Empty,
+            6,
+            [flight2]);
+
+        var request1 = new Request(
+            1,
+            1,
+            string.Empty,
+            "2025-04-25",
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            "2025-04-30",
+            "2",
+            new List<InformationServices> { service1 },
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
+
+        var request2 = new Request(
+            2,
+            2,
+            string.Empty,
+            "2025-04-24 10:05",
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            "2025-04-27 22:05",
+            "2",
+            new List<InformationServices> { service2 },
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
+
+        var request3 = new Request(
+            2,
+            2,
+            string.Empty,
+            "2025-04-25 10:05",
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            "2025-04-27 22:05",
+            "2",
+            new List<InformationServices> { service2 },
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty);
+
+        return new List<Request> { request1, request2, request3 };
     }
 }

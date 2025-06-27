@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Abstractions.Persistence.Repositories.Users;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.Models.Users;
@@ -8,10 +9,12 @@ namespace RomanTourNotification.Application.Users;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, ILogger<UserService> logger)
     {
         _userRepository = userRepository;
+        _logger = logger;
     }
 
     public async Task<long> CreateAsync(User user, CancellationToken cancellationToken)
@@ -23,14 +26,15 @@ public class UserService : IUserService
 
         User? oldUser = await _userRepository.GetUserByChatIdAsync(user.ChatId, cancellationToken);
 
-        // Доабвить логгер "User already exists.";
         if (oldUser is not null)
+        {
+            _logger.LogInformation("User already exists.");
             return oldUser.Id;
+        }
 
         long userId = await _userRepository.CreateUserAsync(user, cancellationToken);
 
-        // TODO Logger
-        Console.WriteLine("User created successfully.");
+        _logger.LogInformation("User created successfully.");
 
         transaction.Complete();
 

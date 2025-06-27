@@ -1,4 +1,4 @@
-using RomanTourNotification.Application.Extensions;
+using RomanTourNotification.Application.Models.Extensions;
 using RomanTourNotification.Application.Models.Groups;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
