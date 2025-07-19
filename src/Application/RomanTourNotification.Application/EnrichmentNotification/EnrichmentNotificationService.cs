@@ -58,8 +58,8 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 continue;
             }
 
-            sb.AppendLine($"{loadData.Name}\n");
-
+            // Отключил, т.к. перешли в один юон
+            // sb.AppendLine($"{loadData.Name}\n");
             FillDocuments(sb, dateBeginInSomeDays);
 
             FillTickets(sb, dateBeginTomorrow, dateEndTomorrow);
