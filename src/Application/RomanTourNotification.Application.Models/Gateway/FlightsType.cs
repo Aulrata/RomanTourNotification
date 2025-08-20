@@ -12,4 +12,7 @@ public enum FlightsType
 
     [Description("Чартерный")]
     Charter = 2,
+
+    [Description("Блок мест")]
+    BlockOfSeats = 3,
 }

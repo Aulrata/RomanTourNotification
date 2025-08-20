@@ -1,4 +1,4 @@
-using RomanTourNotification.Application.Extensions;
+using RomanTourNotification.Application.Models.Extensions;
 using RomanTourNotification.Application.Models.Groups;
 using System.Text;
 using Telegram.Bot;
