@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
-using RomanTourNotification.Application.Extensions;
 using RomanTourNotification.Application.Models.DownloadData;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
+using RomanTourNotification.Application.Models.Extensions;
 using RomanTourNotification.Application.Models.Gateway;
 using System.Net;
 using System.Text;
@@ -43,26 +43,35 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
             if (loadData.Requests is null)
                 continue;
 
-            _filterEnrichmentNotificationService.SetData(dateDto, loadData.Requests);
+            IEnumerable<IGrouping<string, Request>> groupLists = loadData.Requests
+                    .GroupBy(r => r.CompanyNameRus)
+                    .Where(g => !string.IsNullOrEmpty(g.Key));
 
-            _logger.LogInformation("Start combine notify message");
-
-            var dateBeginInSomeDays = _filterEnrichmentNotificationService.GetDateBeginInSomeDays().ToList();
-            var dateBeginTomorrow = _filterEnrichmentNotificationService.GetBeginTomorrow().ToList();
-            var dateEndTomorrow = _filterEnrichmentNotificationService.GetEndTomorrow().ToList();
-
-            if (dateBeginInSomeDays.Count == 0
-                && dateBeginTomorrow.Count == 0
-                && dateEndTomorrow.Count == 0)
+            foreach (IGrouping<string, Request> groupList in groupLists)
             {
-                continue;
+                _filterEnrichmentNotificationService.SetData(dateDto, groupList);
+
+                _logger.LogInformation("Start combine notify message");
+
+                var dateBeginInSomeDays = _filterEnrichmentNotificationService.GetDateBeginInSomeDays().ToList();
+                var dateBeginTomorrow = _filterEnrichmentNotificationService.GetBeginTomorrow().ToList();
+                var dateEndTomorrow = _filterEnrichmentNotificationService.GetEndTomorrow().ToList();
+
+                if (dateBeginInSomeDays.Count == 0
+                    && dateBeginTomorrow.Count == 0
+                    && dateEndTomorrow.Count == 0)
+                {
+                    continue;
+                }
+
+                // Отключил, т.к. перешли в один юон
+                // sb.AppendLine($"{loadData.Name}\n");
+                sb.AppendLine($"ИП {groupList.Key.Split(' ')[1]}\n");
+
+                FillDocuments(sb, dateBeginInSomeDays);
+
+                FillTickets(sb, dateBeginTomorrow, dateEndTomorrow);
             }
-
-            sb.AppendLine($"{loadData.Name}\n");
-
-            FillDocuments(sb, dateBeginInSomeDays);
-
-            FillTickets(sb, dateBeginTomorrow, dateEndTomorrow);
         }
 
         if (sb.Length < 15)

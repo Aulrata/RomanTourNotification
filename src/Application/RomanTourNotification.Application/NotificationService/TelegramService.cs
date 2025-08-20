@@ -62,10 +62,17 @@ public class TelegramService : INotificationService
 
         foreach (Group group in groups)
         {
-            await _botClient.SendMessage(
-                group.ChatId,
-                message,
-                cancellationToken: cancellationToken);
+            try
+            {
+                await _botClient.SendMessage(
+                    group.ChatId,
+                    message,
+                    cancellationToken: cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Не удалось отправить уведомление о прибытии в группу {group.Title}. {ex.Message}");
+            }
         }
     }
 
@@ -84,7 +91,17 @@ public class TelegramService : INotificationService
         {
             string message = await _messageHandlerService.CreatePaymentMessageAsync(currentDay, group, cancellationToken);
 
-            await _botClient.SendMessage(group.ChatId, message, cancellationToken: cancellationToken);
+            try
+            {
+                await _botClient.SendMessage(
+                    group.ChatId,
+                    message,
+                    cancellationToken: cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Не удалось отправить уведомление об полате в группу {group.Title}. {ex.Message}");
+            }
         }
     }
 }
