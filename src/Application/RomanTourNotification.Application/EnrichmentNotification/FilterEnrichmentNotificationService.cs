@@ -43,7 +43,8 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
                                 s.InformationServiceType == InformationServiceType.AirTicket &&
                                 s.Flights
                                     .Any(f =>
-                                        f.FlightsType == FlightsType.BlockOfSeats)) == true);
+                                        f.FlightsType == FlightsType.BlockOfSeats
+                                        && f.DateBeginAsDate == blockOfSeatsDate)) == true);
 
         return _requests
             .Where(r => r.DateBeginAsDate == tomorrow &&
@@ -51,7 +52,8 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
                             .Any(s =>
                                 s.InformationServiceType == InformationServiceType.AirTicket &&
                                 s.Flights
-                                    .Any(f => f.FlightsType == FlightsType.Charter)) == true)
+                                    .Any(f => f.FlightsType == FlightsType.Charter
+                                              && f.DateBeginAsDate == tomorrow)) == true)
             .Concat(result)
             .DistinctBy(r => r.IdSystem);
     }
