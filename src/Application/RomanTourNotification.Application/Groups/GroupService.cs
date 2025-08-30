@@ -24,7 +24,7 @@ public class GroupService : IGroupService
             new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
             TransactionScopeAsyncFlowOption.Enabled);
 
-        Group? oldGroup = await _groupRepository.GetByIdAsync(group.Id, cancellationToken);
+        Group? oldGroup = await _groupRepository.GetByChatIdAsync(group.ChatId, cancellationToken);
 
         if (oldGroup is not null)
             return null;
@@ -53,7 +53,7 @@ public class GroupService : IGroupService
 
     public Task<Group?> GetByIdAsync(long id, CancellationToken cancellationToken)
     {
-        return _groupRepository.GetByIdAsync(id, cancellationToken);
+        return _groupRepository.GetByChatIdAsync(id, cancellationToken);
     }
 
     public Task<IEnumerable<GroupType>> GetAllGroupTypesByIdAsync(long groupId, CancellationToken cancellationToken)
@@ -91,7 +91,7 @@ public class GroupService : IGroupService
 
     public async Task<bool> AddGroupManager(long groupId, string managerFullname, CancellationToken cancellationToken)
     {
-        Group? group = await _groupRepository.GetByIdAsync(groupId, cancellationToken);
+        Group? group = await _groupRepository.GetByChatIdAsync(groupId, cancellationToken);
 
         if (group?.ManagerFullname == managerFullname)
         {
@@ -105,7 +105,7 @@ public class GroupService : IGroupService
 
     public async Task<bool> RemoveGroupManager(long groupId, CancellationToken cancellationToken)
     {
-        Group? group = await _groupRepository.GetByIdAsync(groupId, cancellationToken);
+        Group? group = await _groupRepository.GetByChatIdAsync(groupId, cancellationToken);
 
         if (string.IsNullOrEmpty(group?.ManagerFullname))
         {
