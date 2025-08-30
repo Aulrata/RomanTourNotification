@@ -162,12 +162,12 @@ public class GroupRepository : IGroupRepository
         return groupTypes;
     }
 
-    public async Task<Group?> GetByIdAsync(long id, CancellationToken cancellationToken)
+    public async Task<Group?> GetByChatIdAsync(long chatId, CancellationToken cancellationToken)
     {
         const string sql = """
                            SELECT id, title, chat_id, user_id, manager_fullname, created_at
                            FROM groups 
-                           WHERE id = :id;
+                           WHERE chat_id = :chat_id;
                            """;
 
         await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
@@ -175,7 +175,7 @@ public class GroupRepository : IGroupRepository
         {
             Parameters =
             {
-                new NpgsqlParameter("id", id),
+                new NpgsqlParameter("chat_id", chatId),
             },
         };
 

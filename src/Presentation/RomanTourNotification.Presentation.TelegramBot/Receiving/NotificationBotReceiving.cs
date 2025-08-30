@@ -195,28 +195,28 @@ public class NotificationBotReceiving
 
         if (addedGroup is null)
         {
-            _logger.LogInformation("Group already exists");
-            return;
+            _logger.LogInformation($"Пользователь {userNameFrom} обновил бота в группе {groupTitle}");
+
+            await _botClient.SendMessage(
+                group.ChatId,
+                $"Пользователь {userNameFrom} обновил бота в группе {groupTitle}",
+                cancellationToken: cancellationToken);
         }
+        else
+        {
+            _logger.LogInformation($"Пользователь {userNameFrom} добавил бота в группу {groupTitle}");
 
-        _logger.LogInformation($"Пользователь {userNameFrom} добавил бота в группу {groupTitle}");
-
-        await _botClient.SendMessage(
-            group.ChatId,
-            $"Пользователь {userNameFrom} добавил бота в группу {groupTitle}",
-            cancellationToken: cancellationToken);
+            await _botClient.SendMessage(
+                group.ChatId,
+                $"Пользователь {userNameFrom} добавил бота в группу {groupTitle}",
+                cancellationToken: cancellationToken);
+        }
     }
 
     private async Task DeleteGroup(ChatMemberUpdated chatMember, CancellationToken cancellationToken)
     {
         long deletedGroup = await _groupService.DeleteAsync(chatMember.Chat.Id, cancellationToken);
 
-        if (deletedGroup == 0)
-        {
-            _logger.LogInformation("Group already deleted");
-            return;
-        }
-
-        _logger.LogWarning($"Пользователь {chatMember.From.Username} удалил бота из группы {chatMember.Chat.Title}");
+        _logger.LogWarning($"Пользователь {chatMember.From.Username} удалил бота из группы {chatMember.Chat.Title}. Id группы: {deletedGroup}");
     }
 }
