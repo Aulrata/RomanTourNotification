@@ -18,7 +18,8 @@ public class UserHandler : CommandHandler
 
         var keyboard = new InlineKeyboardMarkup([
             [
-                InlineKeyboardButton.WithCallbackData("Добавить пользователя", "users add_user"),
+
+                // InlineKeyboardButton.WithCallbackData("Добавить пользователя", "users add_user"),
                 InlineKeyboardButton.WithCallbackData("Выбрать пользователя", "users choose_user")
             ],
             [
