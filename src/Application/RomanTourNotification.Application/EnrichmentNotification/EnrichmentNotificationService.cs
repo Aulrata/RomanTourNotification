@@ -36,6 +36,9 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                             Выписка документов на {dateDto.From.Date:dd.MM.yyyy}.
 
                             """;
+
+        bool isDocs = false;
+
         sb.AppendLine(greetings);
 
         foreach (LoadedData loadData in loadedData)
@@ -68,14 +71,16 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                 // sb.AppendLine($"{loadData.Name}\n");
                 sb.AppendLine($"ИП {groupList.Key.Split(' ')[1]}\n");
 
+                isDocs = true;
+
                 FillDocuments(sb, dateBeginInSomeDays);
 
                 FillTickets(sb, dateBeginTomorrow, dateEndTomorrow);
             }
         }
 
-        if (sb.Length < 15)
-            sb.AppendLine("Документов на отправку нет\n");
+        if (!isDocs)
+            sb.AppendLine("Сегодня нет документов для отправки клиентам.\n");
     }
 
     private void FillDocuments(StringBuilder sb, List<Request> requests)

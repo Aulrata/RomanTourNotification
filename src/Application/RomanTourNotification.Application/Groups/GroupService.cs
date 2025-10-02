@@ -110,7 +110,7 @@ public class GroupService : IGroupService
 
     public async Task<bool> RemoveGroupManager(long groupId, CancellationToken cancellationToken)
     {
-        Group? group = await _groupRepository.GetByChatIdAsync(groupId, cancellationToken);
+        Group? group = await _groupRepository.GetByIdAsync(groupId, cancellationToken);
 
         if (string.IsNullOrEmpty(group?.ManagerFullname))
         {
