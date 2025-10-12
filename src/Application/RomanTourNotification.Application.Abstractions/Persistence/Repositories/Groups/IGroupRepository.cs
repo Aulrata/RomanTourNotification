@@ -14,6 +14,8 @@ public interface IGroupRepository
 
     public Task<IEnumerable<GroupType>> GetAllGroupTypesByIdAsync(long groupId, CancellationToken cancellationToken);
 
+    public Task<Group?> GetByIdAsync(long id, CancellationToken cancellationToken);
+
     public Task<Group?> GetByChatIdAsync(long chatId, CancellationToken cancellationToken);
 
     public Task AddGroupTypeByIdAsync(long groupId, GroupType groupType, CancellationToken cancellationToken);
@@ -23,4 +25,6 @@ public interface IGroupRepository
     public Task AddManagerByIdAsync(long groupId, string managerFullname, CancellationToken cancellationToken);
 
     public Task RemoveManagerByIdAsync(long groupId, CancellationToken cancellationToken);
+
+    public Task UpdateAsync(Group group, CancellationToken cancellationToken);
 }

@@ -1,3 +1,4 @@
+using RomanTourNotification.Application.Models.Users;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -16,12 +17,18 @@ public class StartHandler : CommandHandler
             return;
         }
 
-        var keyboard = new InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton.WithCallbackData("Пользователи", "users"),
-                InlineKeyboardButton.WithCallbackData("Группы", "groups"),
-            ]
-        ]);
+        InlineKeyboardMarkup keyboard = context.User.Role is not (UserRole.Admin or UserRole.Developer)
+            ? new InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton.WithCallbackData("Группы", "groups"),
+                ]
+            ])
+            : new InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton.WithCallbackData("Пользователи", "users"),
+                    InlineKeyboardButton.WithCallbackData("Группы", "groups"),
+                ]
+            ]);
 
         if (context.MessageId != 0)
         {
