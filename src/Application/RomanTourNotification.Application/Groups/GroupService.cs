@@ -53,7 +53,12 @@ public class GroupService : IGroupService
 
     public Task<Group?> GetByIdAsync(long id, CancellationToken cancellationToken)
     {
-        return _groupRepository.GetByChatIdAsync(id, cancellationToken);
+        return _groupRepository.GetByIdAsync(id, cancellationToken);
+    }
+
+    public Task<Group?> GetByChatIdAsync(long chatId, CancellationToken cancellationToken)
+    {
+        return _groupRepository.GetByChatIdAsync(chatId, cancellationToken);
     }
 
     public Task<IEnumerable<GroupType>> GetAllGroupTypesByIdAsync(long groupId, CancellationToken cancellationToken)
@@ -105,7 +110,7 @@ public class GroupService : IGroupService
 
     public async Task<bool> RemoveGroupManager(long groupId, CancellationToken cancellationToken)
     {
-        Group? group = await _groupRepository.GetByChatIdAsync(groupId, cancellationToken);
+        Group? group = await _groupRepository.GetByIdAsync(groupId, cancellationToken);
 
         if (string.IsNullOrEmpty(group?.ManagerFullname))
         {
@@ -115,5 +120,14 @@ public class GroupService : IGroupService
 
         await _groupRepository.RemoveManagerByIdAsync(groupId, cancellationToken);
         return true;
+    }
+
+    public async Task<Group?> UpdateAsync(Group group, CancellationToken cancellationToken)
+    {
+        await _groupRepository.UpdateAsync(group, cancellationToken);
+
+        Group? updatedGroup = await _groupRepository.GetByChatIdAsync(group.ChatId, cancellationToken);
+
+        return updatedGroup;
     }
 }

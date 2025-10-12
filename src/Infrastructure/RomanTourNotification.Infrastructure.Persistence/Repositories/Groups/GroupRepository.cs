@@ -42,9 +42,14 @@ public class GroupRepository : IGroupRepository
 
     public async Task<long> DeleteByChatIdAsync(long chatId, CancellationToken cancellationToken)
     {
+        Group? group = await GetByChatIdAsync(chatId, cancellationToken);
+
         const string sql = """
+                           DELETE FROM extra_groups
+                           WHERE GROUP_ID = :id;
+
                            DELETE FROM groups
-                           WHERE chat_id = :chat_id
+                           WHERE id = :id
                            RETURNING chat_id;
                            """;
 
@@ -53,7 +58,7 @@ public class GroupRepository : IGroupRepository
         {
             Parameters =
             {
-                new NpgsqlParameter("chat_id", chatId),
+                new NpgsqlParameter("id", group?.Id),
             },
         };
 
@@ -198,6 +203,42 @@ public class GroupRepository : IGroupRepository
         return null;
     }
 
+    public async Task<Group?> GetByIdAsync(long id, CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           SELECT id, title, chat_id, user_id, manager_fullname, created_at
+                           FROM groups 
+                           WHERE id = :id;
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter("id", id),
+            },
+        };
+
+        await using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        if (await reader.ReadAsync(cancellationToken))
+        {
+            string? managerFullname = reader.GetNullableString(reader.GetOrdinal("manager_fullname"));
+
+            return new Group(
+                reader.GetInt64(reader.GetOrdinal("id")),
+                reader.GetString(reader.GetOrdinal("title")),
+                reader.GetInt64(reader.GetOrdinal("chat_id")),
+                reader.GetInt64(reader.GetOrdinal("user_id")),
+                string.IsNullOrEmpty(managerFullname) ? string.Empty : managerFullname,
+                GroupType.Unspecified,
+                reader.GetDateTime(reader.GetOrdinal("created_at")));
+        }
+
+        return null;
+    }
+
     public async Task AddGroupTypeByIdAsync(long groupId, GroupType groupType, CancellationToken cancellationToken)
     {
         const string sql = """
@@ -273,6 +314,27 @@ public class GroupRepository : IGroupRepository
             Parameters =
             {
                 new NpgsqlParameter("group_id", groupId),
+            },
+        };
+
+        await command.ExecuteReaderAsync(cancellationToken);
+    }
+
+    public async Task UpdateAsync(Group group, CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           UPDATE groups
+                           SET title = :group_title
+                           WHERE group_id = :group_id;
+                           """;
+
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using DbCommand command = new NpgsqlCommand(sql, connection)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter("group_id", group.ChatId),
+                new NpgsqlParameter("group_title", group.Title),
             },
         };
 
