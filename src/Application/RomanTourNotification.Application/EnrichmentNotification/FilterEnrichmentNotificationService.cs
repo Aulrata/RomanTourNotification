@@ -14,7 +14,7 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
         _dateDto = dateDto;
 
         _requests = dateRequests
-            .Where(x => x.Status is not RequestStatus.Cancelled)
+            .Where(x => x.Status is not (RequestStatus.Cancelled or RequestStatus.DocumentsIssued))
             .ToList();
     }
 
