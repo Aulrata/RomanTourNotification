@@ -5,6 +5,7 @@ using RomanTourNotification.Application.Contracts.NotificationService;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Groups;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 
 namespace RomanTourNotification.Application.NotificationService;
 
@@ -67,7 +68,8 @@ public class TelegramService : INotificationService
                 await _botClient.SendMessage(
                     group.ChatId,
                     message,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken,
+                    parseMode: ParseMode.Html);
             }
             catch (Exception ex)
             {
@@ -96,7 +98,8 @@ public class TelegramService : INotificationService
                 await _botClient.SendMessage(
                     group.ChatId,
                     message,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken,
+                    parseMode: ParseMode.Html);
             }
             catch (Exception ex)
             {

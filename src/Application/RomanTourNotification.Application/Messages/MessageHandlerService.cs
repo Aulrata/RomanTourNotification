@@ -42,11 +42,7 @@ public class MessageHandlerService : IMessageHandlerService
     {
         _logger.LogInformation($"Creating payment message for group: {group.Title}");
         var sb = new StringBuilder();
-        string greetings = $"""
-                             Доброе утро!
-                            Доплата туристов на {currentDay.From.Date:dd.MM.yyyy}.
-
-                            """;
+        string greetings = GetMessageDate(currentDay);
 
         sb.AppendLine(greetings);
 
@@ -78,25 +74,26 @@ public class MessageHandlerService : IMessageHandlerService
         CancellationToken cancellationToken)
     {
         var saturdayDay = new DateDto(currentDay.From.AddDays(1));
-        string saturdayGreetings = $"""
+        string saturdayGreetings = GetMessageDate(saturdayDay);
 
-                                    Доплата туристов на {saturdayDay.From.Date:dd.MM.yyyy}.
-
-
-                                    """;
         sb.Append(saturdayGreetings);
 
         await _paymentNotificationService.GetPaymentMessageAsync(saturdayDay, sb, managerFullname, cancellationToken);
 
         var sundayDay = new DateDto(currentDay.From.AddDays(2));
-        string sundayGreetings = $"""
+        string sundayGreetings = GetMessageDate(sundayDay);
 
-                                  Доплата туристов на {sundayDay.From.Date:dd.MM.yyyy}.
-
-
-                                  """;
         sb.Append(sundayGreetings);
 
         await _paymentNotificationService.GetPaymentMessageAsync(sundayDay, sb, managerFullname, cancellationToken);
+    }
+
+    private string GetMessageDate(DateDto currentDay)
+    {
+        return $"""
+
+                 Доплата туристов на <b><u>{currentDay.From.Date:dd.MM.yyyy}</u></b>.
+
+                 """;
     }
 }

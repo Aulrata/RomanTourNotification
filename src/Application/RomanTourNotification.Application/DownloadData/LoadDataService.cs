@@ -54,6 +54,7 @@ public class LoadDataService : ILoadDataService
             var loadData = new LoadedData
             {
                 Name = apiSetting.Name,
+                Url = apiSetting.Url,
             };
 
             int page = 1;

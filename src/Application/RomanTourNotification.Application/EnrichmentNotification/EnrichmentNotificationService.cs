@@ -14,8 +14,8 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 {
     private readonly ILogger<EnrichmentNotificationService> _logger;
     private readonly ILoadDataService _loadDataService;
-
     private readonly IFilterEnrichmentNotificationService _filterEnrichmentNotificationService;
+    private string _currentUrl = string.Empty;
 
     public EnrichmentNotificationService(
         ILogger<EnrichmentNotificationService> logger,
@@ -33,7 +33,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
         string greetings = $"""
                              Доброе утро!
-                            Выписка документов на {dateDto.From.Date:dd.MM.yyyy}.
+                            Выписка документов на <b><u>{dateDto.From.Date:dd.MM.yyyy}</u></b>.
 
                             """;
 
@@ -49,6 +49,8 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
             IEnumerable<IGrouping<string, Request>> groupLists = loadData.Requests
                     .GroupBy(r => r.CompanyNameRus)
                     .Where(g => !string.IsNullOrEmpty(g.Key));
+
+            _currentUrl = loadData.Url;
 
             foreach (IGrouping<string, Request> groupList in groupLists)
             {
@@ -126,9 +128,9 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         string tourOperator = WebUtility.HtmlDecode(request.SupplierName);
 
         return $"""
-                Id: {request.IdSystem}, 
+                Id: <a href="{_currentUrl}{request.IdSystem}">{request.IdSystem}</a>, 
                 ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
-                Дата вылета: {request.DateBegin}, 
+                Дата вылета: <b><u>{request.DateBegin}</u></b>., 
                 Тип самолета: {type}, 
                 Почта: {request.ClientEmail}, 
                 Туроператор: {tourOperator}
