@@ -14,7 +14,7 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
         _dateDto = dateDto;
 
         _requests = dateRequests
-            .Where(x => x.Status is not (RequestStatus.Cancelled or RequestStatus.DocumentsIssued))
+            .Where(x => x.Status is not RequestStatus.Cancelled)
             .ToList();
     }
 
@@ -22,7 +22,9 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
     {
         DateTime targetDate = _dateDto.From.AddDays(_dateDto.Days).Date;
 
-        return _requests
+        IEnumerable<Request> filteredRequests = _requests.Where(x => x.Status is not RequestStatus.DocumentsIssued);
+
+        return filteredRequests
             .Where(r =>
                 r.DateBeginAsDate == targetDate ||
                 (r.DateBeginAsDate < targetDate && r.DateRequestAsDate?.AddDays(1) == _dateDto.From) ||
