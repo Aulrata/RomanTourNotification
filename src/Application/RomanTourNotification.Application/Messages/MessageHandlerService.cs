@@ -92,7 +92,7 @@ public class MessageHandlerService : IMessageHandlerService
     {
         return $"""
 
-                 Доплата туристов на <b><u>{currentDay.From.Date:dd.MM.yyyy}</u></b>.
+                 <b><u>Доплата туристов на {currentDay.From.Date:dd.MM.yyyy}</u></b>.
 
                  """;
     }

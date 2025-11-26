@@ -33,7 +33,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
         string greetings = $"""
                              Доброе утро!
-                            Выписка документов на <b><u>{dateDto.From.Date:dd.MM.yyyy}</u></b>.
+                            <b><u>Выписка документов на {dateDto.From.Date:dd.MM.yyyy}</u></b>.
 
                             """;
 
@@ -130,7 +130,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         return $"""
                 Id: <a href="{_currentUrl}{request.IdSystem}">{request.IdSystem}</a>, 
                 ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
-                Дата вылета: <b><u>{request.DateBegin}</u></b>., 
+                Дата вылета: <b>{request.DateBegin}</b>., 
                 Тип самолета: {type}, 
                 Почта: {request.ClientEmail}, 
                 Туроператор: {tourOperator}
