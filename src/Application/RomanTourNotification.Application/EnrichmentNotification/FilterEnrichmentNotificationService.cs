@@ -9,20 +9,27 @@ public class FilterEnrichmentNotificationService : IFilterEnrichmentNotification
     private DateDto _dateDto = new(DateTime.Today);
     private List<Request> _requests = [];
 
-    public void SetData(DateDto dateDto, IEnumerable<Request> dateRequests)
+    public void SetData(DateDto dateDto, IEnumerable<Request> dateRequests, string managerFullname)
     {
         _dateDto = dateDto;
 
-        _requests = dateRequests
-            .Where(x => x.Status is not (RequestStatus.Cancelled or RequestStatus.DocumentsIssued))
-            .ToList();
+        IEnumerable<Request> query = dateRequests.Where(x => x.Status is not RequestStatus.Cancelled);
+
+        if (!string.IsNullOrEmpty(managerFullname))
+        {
+            query = query.Where(x => x.ManagerFullName == managerFullname);
+        }
+
+        _requests = query.ToList();
     }
 
     public IEnumerable<Request> GetDateBeginInSomeDays()
     {
         DateTime targetDate = _dateDto.From.AddDays(_dateDto.Days).Date;
 
-        return _requests
+        IEnumerable<Request> filteredRequests = _requests.Where(x => x.Status is not RequestStatus.DocumentsIssued);
+
+        return filteredRequests
             .Where(r =>
                 r.DateBeginAsDate == targetDate ||
                 (r.DateBeginAsDate < targetDate && r.DateRequestAsDate?.AddDays(1) == _dateDto.From) ||
