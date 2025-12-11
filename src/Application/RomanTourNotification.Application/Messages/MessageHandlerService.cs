@@ -24,15 +24,15 @@ public class MessageHandlerService : IMessageHandlerService
         _paymentNotificationService = paymentNotificationService;
     }
 
-    public async Task<string> CreateArrivalMessageAsync(DateDto currentDay, CancellationToken cancellationToken)
+    public async Task<string> CreateArrivalMessageAsync(DateDto currentDay, Group group, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Creating arrival message");
         var sb = new StringBuilder();
 
-        await _enrichmentNotificationService.GetArrivalByDateAsync(currentDay, sb, cancellationToken);
+        await _enrichmentNotificationService.GetArrivalByDateAsync(currentDay, sb, group.ManagerFullname, cancellationToken);
 
         if (currentDay.From.DayOfWeek is DayOfWeek.Friday)
-            await CreateArrivalWeekendMessageAsync(currentDay, sb, cancellationToken);
+            await CreateArrivalWeekendMessageAsync(currentDay, sb, group.ManagerFullname, cancellationToken);
 
         _logger.LogInformation("Arrival message created");
         return sb.ToString();
@@ -58,13 +58,14 @@ public class MessageHandlerService : IMessageHandlerService
     private async Task CreateArrivalWeekendMessageAsync(
         DateDto currentDay,
         StringBuilder sb,
+        string managerFullname,
         CancellationToken cancellationToken)
     {
         var saturdayDay = new DateDto(currentDay.From.AddDays(1));
-        await _enrichmentNotificationService.GetArrivalByDateAsync(saturdayDay, sb, cancellationToken);
+        await _enrichmentNotificationService.GetArrivalByDateAsync(saturdayDay, sb, managerFullname, cancellationToken);
 
         var sundayDay = new DateDto(currentDay.From.AddDays(2));
-        await _enrichmentNotificationService.GetArrivalByDateAsync(sundayDay, sb, cancellationToken);
+        await _enrichmentNotificationService.GetArrivalByDateAsync(sundayDay, sb, managerFullname, cancellationToken);
     }
 
     private async Task CreatePaymentWeekendMessageAsync(

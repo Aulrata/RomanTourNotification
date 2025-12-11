@@ -5,7 +5,7 @@ namespace RomanTourNotification.Application.Contracts.EnrichmentNotification;
 
 public interface IFilterEnrichmentNotificationService
 {
-    public void SetData(DateDto dateDto, IEnumerable<Request> dateRequests);
+    public void SetData(DateDto dateDto, IEnumerable<Request> dateRequests, string managerFullname);
 
     public IEnumerable<Request> GetDateBeginInSomeDays();
 

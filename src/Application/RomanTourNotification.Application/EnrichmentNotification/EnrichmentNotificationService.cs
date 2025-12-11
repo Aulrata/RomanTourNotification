@@ -27,7 +27,11 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         _filterEnrichmentNotificationService = filterEnrichmentNotificationService;
     }
 
-    public async Task GetArrivalByDateAsync(DateDto dateDto, StringBuilder sb, CancellationToken cancellationToken)
+    public async Task GetArrivalByDateAsync(
+        DateDto dateDto,
+        StringBuilder sb,
+        string managerFullname,
+        CancellationToken cancellationToken)
     {
         IEnumerable<LoadedData> loadedData = await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
 
@@ -54,7 +58,7 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 
             foreach (IGrouping<string, Request> groupList in groupLists)
             {
-                _filterEnrichmentNotificationService.SetData(dateDto, groupList);
+                _filterEnrichmentNotificationService.SetData(dateDto, groupList, managerFullname);
 
                 _logger.LogInformation("Start combine notify message");
 

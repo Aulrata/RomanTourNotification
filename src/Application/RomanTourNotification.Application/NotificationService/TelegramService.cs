@@ -59,12 +59,12 @@ public class TelegramService : INotificationService
             return;
         }
 
-        string message = await _messageHandlerService.CreateArrivalMessageAsync(currentDay, cancellationToken);
-
         foreach (Group group in groups)
         {
             try
             {
+                string message = await _messageHandlerService.CreateArrivalMessageAsync(currentDay, group, cancellationToken);
+
                 await _botClient.SendMessage(
                     group.ChatId,
                     message,

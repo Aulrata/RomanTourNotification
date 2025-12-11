@@ -5,5 +5,9 @@ namespace RomanTourNotification.Application.Contracts.EnrichmentNotification;
 
 public interface IEnrichmentNotificationService
 {
-    public Task GetArrivalByDateAsync(DateDto dateDto, StringBuilder sb, CancellationToken cancellationToken);
+    public Task GetArrivalByDateAsync(
+        DateDto dateDto,
+        StringBuilder sb,
+        string managerFullname,
+        CancellationToken cancellationToken);
 }
