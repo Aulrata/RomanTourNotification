@@ -14,6 +14,7 @@ public class PaymentNotificationService : IPaymentNotificationService
     private readonly ILoadDataService _loadDataService;
     private IEnumerable<IGrouping<string, Request>> _groupings;
     private DateTime _lastUpdateDate;
+    private string _currentUrl = string.Empty;
 
     public PaymentNotificationService(
         ILogger<PaymentNotificationService> logger,
@@ -41,13 +42,13 @@ public class PaymentNotificationService : IPaymentNotificationService
 
     private void GetAllPaymentMessagesAsync(StringBuilder sb, CancellationToken cancellationToken)
     {
-        var managerData = _groupings.ToList();
+        var managerData = _groupings.ToList(); // TODO: Почему-то при втором вызове пусто в рамках одной программы.
 
         _logger.LogInformation("The formation of a message for all payments has begun.");
 
         if (managerData.Count == 0)
         {
-            sb.Append("Сегодня нет клиентов, которым надо выставлять счет\n");
+            sb.Append("\nСегодня нет клиентов, которым надо выставлять счет\n");
             _logger.LogInformation("There are no clients to invoice today.");
             return;
         }
@@ -60,13 +61,8 @@ public class PaymentNotificationService : IPaymentNotificationService
                 if (cancellationToken.IsCancellationRequested)
                     return;
 
-                string message = $"""
+                string message = GetPaymentInformation(request);
 
-                                  Id: {request.IdSystem}, 
-                                  ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
-                                  ИП: {request.CompanyNameShort}
-
-                                  """;
                 sb.Append(message);
             }
         }
@@ -97,13 +93,8 @@ public class PaymentNotificationService : IPaymentNotificationService
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            string message = $"""
+            string message = GetPaymentInformation(request);
 
-                              Id: {request.IdSystem}, 
-                              ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
-                              ИП: {request.CompanyNameShort}
-
-                              """;
             sb.Append(message);
         }
 
@@ -133,10 +124,23 @@ public class PaymentNotificationService : IPaymentNotificationService
                     r.DatePaymentDeadline == dateDto.From)
                 .ToList();
 
+            _currentUrl = loadedData.Url;
+
             requestsWithClientDebt.AddRange(tmp);
         }
 
         _groupings = requestsWithClientDebt.GroupBy(r => r.ManagerFullName);
         _lastUpdateDate = DateTime.Today.Date;
+    }
+
+    private string GetPaymentInformation(Request request)
+    {
+        return $"""
+
+                Id: <a href="{_currentUrl}{request.IdSystem}">{request.IdSystem}</a>, 
+                ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
+                ИП: {request.CompanyNameShort}
+
+                """;
     }
 }

@@ -14,8 +14,8 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
 {
     private readonly ILogger<EnrichmentNotificationService> _logger;
     private readonly ILoadDataService _loadDataService;
-
     private readonly IFilterEnrichmentNotificationService _filterEnrichmentNotificationService;
+    private string _currentUrl = string.Empty;
 
     public EnrichmentNotificationService(
         ILogger<EnrichmentNotificationService> logger,
@@ -27,13 +27,17 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         _filterEnrichmentNotificationService = filterEnrichmentNotificationService;
     }
 
-    public async Task GetArrivalByDateAsync(DateDto dateDto, StringBuilder sb, CancellationToken cancellationToken)
+    public async Task GetArrivalByDateAsync(
+        DateDto dateDto,
+        StringBuilder sb,
+        string managerFullname,
+        CancellationToken cancellationToken)
     {
         IEnumerable<LoadedData> loadedData = await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
 
         string greetings = $"""
                              Доброе утро!
-                            Выписка документов на {dateDto.From.Date:dd.MM.yyyy}.
+                            <b><u>Выписка документов на {dateDto.From.Date:dd.MM.yyyy}</u></b>.
 
                             """;
 
@@ -50,9 +54,11 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
                     .GroupBy(r => r.CompanyNameRus)
                     .Where(g => !string.IsNullOrEmpty(g.Key));
 
+            _currentUrl = loadData.Url;
+
             foreach (IGrouping<string, Request> groupList in groupLists)
             {
-                _filterEnrichmentNotificationService.SetData(dateDto, groupList);
+                _filterEnrichmentNotificationService.SetData(dateDto, groupList, managerFullname);
 
                 _logger.LogInformation("Start combine notify message");
 
@@ -126,9 +132,9 @@ public class EnrichmentNotificationService : IEnrichmentNotificationService
         string tourOperator = WebUtility.HtmlDecode(request.SupplierName);
 
         return $"""
-                Id: {request.IdSystem}, 
+                Id: <a href="{_currentUrl}{request.IdSystem}">{request.IdSystem}</a>, 
                 ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
-                Дата вылета: {request.DateBegin}, 
+                Дата вылета: <b>{request.DateBegin}</b>., 
                 Тип самолета: {type}, 
                 Почта: {request.ClientEmail}, 
                 Туроператор: {tourOperator}
