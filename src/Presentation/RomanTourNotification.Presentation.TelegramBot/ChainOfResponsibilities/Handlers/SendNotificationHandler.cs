@@ -6,30 +6,29 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RomanTourNotification.Presentation.TelegramBot.ChainOfResponsibilities.Handlers;
 
-public class AddGroupTypeHandler : CommandHandler
+public class SendNotificationHandler : CommandHandler
 {
     public override async Task Handle(HandlerContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (context.Iterator.CurrentWord != "add_group_type")
+        if (context.Iterator.CurrentWord != "send_notification")
         {
             await base.Handle(context);
             return;
         }
 
+        IEnumerable<GroupType> groupTypes = await context.HandlerServices.GroupService.GetAllGroupTypesByIdAsync(
+            context.Iterator.ObjectId,
+            context.CancellationToken);
+
+        IEnumerable<InlineKeyboardButton> buttons = groupTypes
+            .Select(groupType => InlineKeyboardButton.WithCallbackData(
+                $"{groupType.GetDescription()}",
+                $"groups choose_group show_group {context.Iterator.ObjectId} send_notification {(int)groupType}"));
+
         var keyboard = new InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton.WithCallbackData(
-                    $"{GroupType.Arrival.GetDescription()}",
-                    $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.Arrival}"),
-                InlineKeyboardButton.WithCallbackData(
-                    $"{GroupType.Payment.GetDescription()}",
-                    $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.Payment}"),
-                InlineKeyboardButton.WithCallbackData(
-                    $"{GroupType.Return.GetDescription()}",
-                    $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.Return}"),
-            ],
+            buttons,
             [
                 InlineKeyboardButton.WithCallbackData(
                     "Назад",
@@ -41,10 +40,12 @@ public class AddGroupTypeHandler : CommandHandler
         {
             context.Iterator.MoveNext();
 
-            await context.HandlerServices.GroupService.AddGroupTypeByIdAsync(
-                context.Iterator.ObjectId,
-                (GroupType)int.Parse(context.Iterator.CurrentWord),
-                context.CancellationToken);
+            var groupType = (GroupType)int.Parse(context.Iterator.CurrentWord);
+            long groupId = context.Iterator.ObjectId;
+
+            Group? group = await context.HandlerServices.GroupService.GetByIdAsync(groupId, context.CancellationToken);
+
+            await context.HandlerServices.NotificationService.SendForcedNotificationAsync(group, groupType, context.CancellationToken);
 
             var backIterator = new Iterator($"groups choose_group show_group {context.Iterator.ObjectId}");
 
@@ -60,7 +61,7 @@ public class AddGroupTypeHandler : CommandHandler
                 await context.BotClient.EditMessageText(
                     chatId: context.User.ChatId,
                     messageId: context.MessageId,
-                    text: "Выберите тип, который хотите добавить",
+                    text: "Выберите тип, по которому хотите отправить уведомление",
                     replyMarkup: keyboard,
                     cancellationToken: context.CancellationToken);
             }

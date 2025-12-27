@@ -1,5 +1,6 @@
 using RomanTourNotification.Application.Models.Extensions;
 using RomanTourNotification.Application.Models.Groups;
+using RomanTourNotification.Application.Models.Users;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -25,28 +26,42 @@ public class ShowGroupHandler : CommandHandler
 
         context.Iterator.ObjectId = groupId;
 
-        var keyboard = new InlineKeyboardMarkup([
-            [
+        var buttons = new List<List<InlineKeyboardButton>>
+        {
+            new()
+            {
                 InlineKeyboardButton.WithCallbackData(
                     "Добавить тип",
                     $"groups choose_group show_group {groupId} add_group_type"),
                 InlineKeyboardButton.WithCallbackData(
                     "Удалить тип",
                     $"groups choose_group show_group {groupId} remove_group_type"),
-            ],
-            [
+            },
+            new()
+            {
                 InlineKeyboardButton.WithCallbackData(
                     "Добавить менеджера",
                     $"groups choose_group show_group {groupId} add_group_manager"),
                 InlineKeyboardButton.WithCallbackData(
                     "Удалить менеджера",
                     $"groups choose_group show_group {groupId} remove_group_manager"),
-            ],
-            [
-                InlineKeyboardButton.WithCallbackData("Назад", "groups choose_group")
+            },
+            new()
+            {
+                InlineKeyboardButton.WithCallbackData("Назад", "groups choose_group"),
+            },
+        };
 
-            ]
-        ]);
+        if (context.User.Role == UserRole.Developer)
+        {
+            var developerButtons = InlineKeyboardButton.WithCallbackData(
+                "Отправить уведомление",
+                $"groups choose_group show_group {groupId} send_notification");
+
+            buttons.Add([developerButtons]);
+        }
+
+        var keyboard = new InlineKeyboardMarkup(buttons);
 
         if (context.Iterator.CountOfCommand > 4)
         {
@@ -56,10 +71,12 @@ public class ShowGroupHandler : CommandHandler
             var removeGroupTypeHandler = new RemoveGroupTypeHandler();
             var addGroupManagerHandler = new AddGroupManagerHandler();
             var removeGroupManagerHandler = new RemoveGroupManagerHandler();
-            await addGroupTypeHandler
-                .SetNext(removeGroupTypeHandler).Result
-                .SetNext(addGroupManagerHandler).Result
-                .SetNext(removeGroupManagerHandler);
+            var sendNotificationHandler = new SendNotificationHandler();
+            addGroupTypeHandler
+                .SetNext(removeGroupTypeHandler)
+                .SetNext(addGroupManagerHandler)
+                .SetNext(removeGroupManagerHandler)
+                .SetNext(sendNotificationHandler);
             await addGroupTypeHandler.Handle(context);
         }
         else

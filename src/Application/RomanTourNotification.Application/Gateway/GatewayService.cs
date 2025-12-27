@@ -43,13 +43,13 @@ public class GatewayService : IGatewayService
 
         using HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
 
+        string content = await response.Content.ReadAsStringAsync(cancellationToken);
+
         if (response.StatusCode is not HttpStatusCode.OK)
         {
             _logger.LogError($"Request failed with status code {response.StatusCode}");
-            throw new HttpRequestException($"Request failed with status code {response.StatusCode}");
+            throw new HttpRequestException($"Request failed with status code {response.StatusCode}. {content}");
         }
-
-        string content = await response.Content.ReadAsStringAsync(cancellationToken);
 
         return new ContextDto(content, response.StatusCode);
     }

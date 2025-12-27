@@ -15,6 +15,9 @@
         <Content Update="appsettings.*.json">
             <DependentUpon>appsettings.json</DependentUpon>
         </Content>
+        <Content Update="credentials.json">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>

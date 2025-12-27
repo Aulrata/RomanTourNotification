@@ -4,10 +4,10 @@ public abstract class CommandHandler : ICommandHandler
 {
     private ICommandHandler? _nextHandler;
 
-    public Task<ICommandHandler> SetNext(ICommandHandler handler)
+    public ICommandHandler SetNext(ICommandHandler handler)
     {
         _nextHandler = handler;
-        return Task.FromResult(handler);
+        return handler;
     }
 
     public virtual Task Handle(HandlerContext context)

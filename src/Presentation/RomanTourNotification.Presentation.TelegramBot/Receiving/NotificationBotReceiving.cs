@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.Groups;
+using RomanTourNotification.Application.Contracts.NotificationService;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.Models.Groups;
 using RomanTourNotification.Application.Models.Users;
@@ -20,6 +21,7 @@ public class NotificationBotReceiving
     private readonly IUserService _userService;
     private readonly IGroupService _groupService;
     private readonly ILoadEmployees _loadEmployees;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<NotificationBotReceiving> _logger;
 
     // TODO Учесть усдалеие пользователей
@@ -30,13 +32,15 @@ public class NotificationBotReceiving
         IUserService userService,
         IGroupService groupService,
         ILogger<NotificationBotReceiving> logger,
-        ILoadEmployees loadEmployees)
+        ILoadEmployees loadEmployees,
+        INotificationService notificationService)
     {
         _botClient = botClient;
         _userService = userService;
         _groupService = groupService;
         _logger = logger;
         _loadEmployees = loadEmployees;
+        _notificationService = notificationService;
         _users = [];
     }
 
@@ -161,13 +165,13 @@ public class NotificationBotReceiving
             }
 
             var iterator = new Iterator(text);
-            var handlerServices = new HandlerServices(_userService, _groupService, _loadEmployees);
+            var handlerServices = new HandlerServices(_userService, _groupService, _loadEmployees, _notificationService);
             var context =
                 new HandlerContext(value, iterator, _botClient, cancellationToken, handlerServices, messageId);
             var startHandler = new StartHandler();
             var userHandler = new UserHandler();
             var groupHandler = new GroupHandler();
-            await startHandler.SetNext(userHandler).Result.SetNext(groupHandler);
+            startHandler.SetNext(userHandler).SetNext(groupHandler);
             await startHandler.Handle(context);
         }
         catch (Exception ex)

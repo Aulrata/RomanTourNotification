@@ -33,7 +33,7 @@ public class UserHandler : CommandHandler
 
             var userAddHandler = new UserAddHandler();
             var chooseUserHandler = new ChooseUserHandler();
-            await userAddHandler.SetNext(chooseUserHandler);
+            userAddHandler.SetNext(chooseUserHandler);
             await userAddHandler.Handle(context);
         }
         else
