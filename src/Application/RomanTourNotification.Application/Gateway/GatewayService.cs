@@ -47,7 +47,7 @@ public class GatewayService : IGatewayService
 
         if (response.StatusCode is not HttpStatusCode.OK)
         {
-            _logger.LogError($"Request failed with status code {response.StatusCode}");
+            _logger.LogError("Request failed with status code {StatusCode}", response.StatusCode);
             throw new HttpRequestException($"Request failed with status code {response.StatusCode}. {content}");
         }
 

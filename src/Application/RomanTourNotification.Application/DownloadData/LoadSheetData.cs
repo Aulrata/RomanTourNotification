@@ -65,7 +65,10 @@ public class LoadSheetData : ILoadSheetData
         if (row.Count < _sheetsConfig.ColumIndex.MinimumColumns)
         {
             _logger.LogWarning(
-                $"Row count is less than minimum columns. Minimum {_sheetsConfig.ColumIndex.MinimumColumns}, current {row.Count}");
+                "Row count is less than minimum columns. Minimum {MinimumColumns}, current {Count}",
+                _sheetsConfig.ColumIndex.MinimumColumns,
+                row.Count);
+
             return null;
         }
 

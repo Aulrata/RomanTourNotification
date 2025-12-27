@@ -120,7 +120,10 @@ public class TelegramService : INotificationService
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Не удалось отправить уведомление возвратов в группу {group.Title}. {ex.Message}");
+                _logger.LogError(
+                    "Failed to send daily return notification to group: {Title}. {Message}",
+                    group.Title,
+                    ex.Message);
             }
         }
     }
@@ -151,7 +154,10 @@ public class TelegramService : INotificationService
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Не удалось отправить уведомление о прибытии в группу {group.Title}. {ex.Message}");
+                _logger.LogError(
+                    "Failed to send arrival notification to group: {Title}. {Message}",
+                    group.Title,
+                    ex.Message);
             }
         }
     }
@@ -182,7 +188,10 @@ public class TelegramService : INotificationService
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Не удалось отправить уведомление об оплате в группу {group.Title}. {ex.Message}");
+                _logger.LogError(
+                    "Failed to send payment notification to group: {Title}. {Message}",
+                    group.Title,
+                    ex.Message);
             }
         }
     }
@@ -214,7 +223,10 @@ public class TelegramService : INotificationService
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Не удалось отправить уведомление возвратов в группу {group.Title}. {ex.Message}");
+                _logger.LogError(
+                    "Failed to send return notification to group: {Title}. {Message}",
+                    group.Title,
+                    ex.Message);
             }
         }
     }
