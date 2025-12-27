@@ -219,7 +219,7 @@ public class TelegramService : INotificationService
                     cancellationToken: cancellationToken,
                     parseMode: ParseMode.Html);
 
-                _logger.LogInformation($"Send return message for group: {group.Title}");
+                _logger.LogInformation("Send return message for group: {Title}", group.Title);
             }
             catch (Exception ex)
             {
