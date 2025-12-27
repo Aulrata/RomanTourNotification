@@ -35,7 +35,7 @@ public class ReturnNotificationService : IReturnNotificationService
         {
             IEnumerable<RowSheet> filteredRows = _rowSheets
                 .GroupBy(r => r.Manager)
-                .First(x => x.Key.Equals(manager, StringComparison.OrdinalIgnoreCase));
+                .First(x => x.Key.Split(' ').First().Equals(manager, StringComparison.OrdinalIgnoreCase));
 
             _logger.LogInformation("Start crating return message for manager: {Manager}", manager);
             message = GetReturnMessage(filteredRows);

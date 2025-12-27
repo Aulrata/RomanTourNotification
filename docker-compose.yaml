@@ -30,6 +30,7 @@ services:
       - "127.0.0.1:8080:8080"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - /config/credentials.json:/app/credentials.json:ro
     environment:
       Infrastructure__Persistence__Postgres__Host: postgres
       Infrastructure__Persistence__Postgres__Database: postgres
