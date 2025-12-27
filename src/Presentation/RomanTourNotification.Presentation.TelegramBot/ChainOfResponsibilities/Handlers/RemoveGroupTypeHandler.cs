@@ -26,6 +26,9 @@ public class RemoveGroupTypeHandler : CommandHandler
                 InlineKeyboardButton.WithCallbackData(
                     $"{GroupType.Payment.GetDescription()}",
                     $"groups choose_group show_group {context.Iterator.ObjectId} remove_group_type {(int)GroupType.Payment}"),
+                InlineKeyboardButton.WithCallbackData(
+                    $"{GroupType.Return.GetDescription()}",
+                    $"groups choose_group show_group {context.Iterator.ObjectId} remove_group_type {(int)GroupType.Return}"),
             ],
             [
                 InlineKeyboardButton.WithCallbackData(

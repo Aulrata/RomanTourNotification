@@ -12,4 +12,7 @@ public enum GroupType
 
     [Description("Документы прибытия")]
     Arrival = 2,
+
+    [Description("Возвраты")]
+    Return = 3,
 }

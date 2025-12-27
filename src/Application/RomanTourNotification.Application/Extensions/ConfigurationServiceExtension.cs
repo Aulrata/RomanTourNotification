@@ -7,6 +7,7 @@ using RomanTourNotification.Application.Gateway;
 using RomanTourNotification.Application.Models.Bots;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
+using RomanTourNotification.Application.Models.GoogleSheets;
 using Telegram.Bot;
 
 namespace RomanTourNotification.Application.Extensions;
@@ -25,13 +26,19 @@ public static class ConfigurationServiceExtension
             });
 
             collection.Configure<ConfigurationService>(configuration.GetSection("ConfigurationService"));
-
             collection.Configure<TimeSettings>(configuration.GetSection("TimeSettings"));
+            collection.Configure<GoogleSheetsConfig>(configuration.GetSection("GoogleSheetsConfig"));
 
             collection.AddSingleton<TimeSettings>(provide =>
             {
                 TimeSettings timeSettings = provide.GetRequiredService<IOptions<TimeSettings>>().Value;
-                return new TimeSettings { HoursUtc = timeSettings.HoursUtc, Minutes = timeSettings.Minutes };
+                return new TimeSettings
+                {
+                    HoursUtc = timeSettings.HoursUtc,
+                    Minutes = timeSettings.Minutes,
+                    ReturnHoursUtc = timeSettings.ReturnHoursUtc,
+                    ReturnMinute = timeSettings.ReturnMinute,
+                };
             });
 
             collection.Configure<List<ApiSettings>>(configuration.GetSection("ApiSettings"));
