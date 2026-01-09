@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.Groups;
+using RomanTourNotification.Application.Contracts.NotificationService;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.Models.Groups;
 using RomanTourNotification.Application.Models.Users;
@@ -20,6 +21,7 @@ public class NotificationBotReceiving
     private readonly IUserService _userService;
     private readonly IGroupService _groupService;
     private readonly ILoadEmployees _loadEmployees;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<NotificationBotReceiving> _logger;
 
     // TODO Учесть усдалеие пользователей
@@ -30,13 +32,15 @@ public class NotificationBotReceiving
         IUserService userService,
         IGroupService groupService,
         ILogger<NotificationBotReceiving> logger,
-        ILoadEmployees loadEmployees)
+        ILoadEmployees loadEmployees,
+        INotificationService notificationService)
     {
         _botClient = botClient;
         _userService = userService;
         _groupService = groupService;
         _logger = logger;
         _loadEmployees = loadEmployees;
+        _notificationService = notificationService;
         _users = [];
     }
 
@@ -51,7 +55,7 @@ public class NotificationBotReceiving
             cancellationToken: cancellationToken);
 
         Telegram.Bot.Types.User bot = await _botClient.GetMe(cancellationToken);
-        _logger.LogInformation($"{bot.Username} started");
+        _logger.LogInformation("{Username} started", bot.Username);
     }
 
     private async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
@@ -161,18 +165,18 @@ public class NotificationBotReceiving
             }
 
             var iterator = new Iterator(text);
-            var handlerServices = new HandlerServices(_userService, _groupService, _loadEmployees);
+            var handlerServices = new HandlerServices(_userService, _groupService, _loadEmployees, _notificationService);
             var context =
                 new HandlerContext(value, iterator, _botClient, cancellationToken, handlerServices, messageId);
             var startHandler = new StartHandler();
             var userHandler = new UserHandler();
             var groupHandler = new GroupHandler();
-            await startHandler.SetNext(userHandler).Result.SetNext(groupHandler);
+            startHandler.SetNext(userHandler).SetNext(groupHandler);
             await startHandler.Handle(context);
         }
         catch (Exception ex)
         {
-            _logger.LogInformation($"Bot Error: {ex.Message} ");
+            _logger.LogError("Bot Error: {Message}", ex.Message);
         }
     }
 
@@ -193,7 +197,7 @@ public class NotificationBotReceiving
         if (user is null)
         {
             _logger.LogError(
-                "Не удалось добавить группу. Пользователь, который добавлял в группу не найден в базе данных");
+                "Failed to add group. The user who added to the group was not found in the database");
             return;
         }
 
@@ -219,7 +223,10 @@ public class NotificationBotReceiving
 
             await _groupService.UpdateAsync(updatedGroup, cancellationToken);
 
-            _logger.LogInformation($"Пользователь {userNameFrom} обновил бота в группе {groupTitle}");
+            _logger.LogInformation(
+                "Пользователь {UserName} обновил бота в группе {Title}",
+                userNameFrom,
+                groupTitle);
 
             await _botClient.SendMessage(
                 group.ChatId,
@@ -228,7 +235,10 @@ public class NotificationBotReceiving
         }
         else
         {
-            _logger.LogInformation($"Пользователь {userNameFrom} добавил бота в группу {groupTitle}");
+            _logger.LogInformation(
+                "Пользователь {UserName} добавил бота в группу {Title}",
+                userNameFrom,
+                groupTitle);
 
             await _botClient.SendMessage(
                 group.ChatId,
@@ -242,6 +252,9 @@ public class NotificationBotReceiving
         long deletedGroup = await _groupService.DeleteAsync(chatMember.Chat.Id, cancellationToken);
 
         _logger.LogWarning(
-            $"Пользователь {chatMember.From.Username} удалил бота из группы {chatMember.Chat.Title}. Id группы: {deletedGroup}");
+            "Пользователь {Username} удалил бота из группы {Title}. Id группы: {GroupId}",
+            chatMember.From.Username,
+            chatMember.Chat.Title,
+            deletedGroup);
     }
 }

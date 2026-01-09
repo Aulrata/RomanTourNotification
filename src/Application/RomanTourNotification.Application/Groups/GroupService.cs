@@ -72,7 +72,7 @@ public class GroupService : IGroupService
 
         if (types.Contains(groupType))
         {
-            _logger.LogInformation("Данный тип у группы уже добавлен");
+            _logger.LogInformation("This type has already been added to the group.");
             return false;
         }
 
@@ -86,7 +86,7 @@ public class GroupService : IGroupService
 
         if (!types.Contains(groupType))
         {
-            _logger.LogInformation("Данный тип у группы уже удален");
+            _logger.LogInformation("This group type has already been removed.");
             return false;
         }
 
@@ -100,7 +100,7 @@ public class GroupService : IGroupService
 
         if (group?.ManagerFullname == managerFullname)
         {
-            _logger.LogInformation("У группы уже добавлен этот менеджер.");
+            _logger.LogInformation("The group already has this manager added.");
             return false;
         }
 
@@ -114,7 +114,7 @@ public class GroupService : IGroupService
 
         if (string.IsNullOrEmpty(group?.ManagerFullname))
         {
-            _logger.LogInformation("У группы уже удален менеджер.");
+            _logger.LogInformation("The group's manager has already been removed.");
             return false;
         }
 

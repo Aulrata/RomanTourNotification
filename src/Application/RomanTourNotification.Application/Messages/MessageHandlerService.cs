@@ -26,7 +26,7 @@ public class MessageHandlerService : IMessageHandlerService
 
     public async Task<string> CreateArrivalMessageAsync(DateDto currentDay, Group group, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Creating arrival message");
+        _logger.LogInformation("Creating arrival message for group: {Title}", group.Title);
         var sb = new StringBuilder();
 
         await _enrichmentNotificationService.GetArrivalByDateAsync(currentDay, sb, group.ManagerFullname, cancellationToken);
@@ -34,13 +34,13 @@ public class MessageHandlerService : IMessageHandlerService
         if (currentDay.From.DayOfWeek is DayOfWeek.Friday)
             await CreateArrivalWeekendMessageAsync(currentDay, sb, group.ManagerFullname, cancellationToken);
 
-        _logger.LogInformation("Arrival message created");
+        _logger.LogInformation("Arrival message created for group: {Title}", group.Title);
         return sb.ToString();
     }
 
     public async Task<string> CreatePaymentMessageAsync(DateDto currentDay, Group group, CancellationToken cancellationToken)
     {
-        _logger.LogInformation($"Creating payment message for group: {group.Title}");
+        _logger.LogInformation("Creating payment message for group: {Title}", group.Title);
         var sb = new StringBuilder();
         string greetings = GetMessageDate(currentDay);
 
@@ -51,7 +51,7 @@ public class MessageHandlerService : IMessageHandlerService
         if (currentDay.From.DayOfWeek is DayOfWeek.Friday)
             await CreatePaymentWeekendMessageAsync(sb, currentDay, group.ManagerFullname, cancellationToken);
 
-        _logger.LogInformation($"Payment message created for group: {group.Title}");
+        _logger.LogInformation("Payment message created for group: {Title}", group.Title);
         return sb.ToString();
     }
 

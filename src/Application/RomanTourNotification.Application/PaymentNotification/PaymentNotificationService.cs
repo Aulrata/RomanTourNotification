@@ -77,12 +77,12 @@ public class PaymentNotificationService : IPaymentNotificationService
     {
         var managerData = _groupings.Where(g => g.Key == managerFullname).ToList();
 
-        _logger.LogInformation($"The formation of the message on payments of the manager has begun: {managerFullname}.");
+        _logger.LogInformation("The formation of the message on payments of the manager has begun: {Manager}.", managerFullname);
 
         if (managerData.Count == 0)
         {
             sb.Append("\nСегодня нет клиентов, которым надо выставлять счет\n");
-            _logger.LogInformation($"There are no clients to invoice today for: {managerFullname}.");
+            _logger.LogInformation("There are no clients to invoice today for: {Manager}.", managerFullname);
             return;
         }
 
@@ -98,7 +98,9 @@ public class PaymentNotificationService : IPaymentNotificationService
             sb.Append(message);
         }
 
-        _logger.LogInformation($"The formation of the message on payments of the manager has been completed: {managerFullname}.");
+        _logger.LogInformation(
+            "The formation of the message on payments of the manager has been completed: {Manager}.",
+            managerFullname);
     }
 
     private async Task LoadPaymentDataAsync(DateDto dateDto, CancellationToken cancellationToken)
@@ -107,7 +109,7 @@ public class PaymentNotificationService : IPaymentNotificationService
 
         var requestsWithClientDebt = new List<Request>();
 
-        _logger.LogInformation($"Payment data for {dateDto.From} has been loaded.");
+        _logger.LogInformation("Payment data for {Date} has been loaded.", dateDto.From);
 
         foreach (LoadedData loadedData in paymentData)
         {
@@ -115,7 +117,10 @@ public class PaymentNotificationService : IPaymentNotificationService
 
             if (data is null || data.Count == 0)
             {
-                _logger.LogWarning($"Payment data for {loadedData.Name} {dateDto.From} has been loaded but is empty.");
+                _logger.LogWarning(
+                    "Payment data for {Name} {Date} has been loaded but is empty.",
+                    loadedData.Name,
+                    dateDto.From);
                 continue;
             }
 
