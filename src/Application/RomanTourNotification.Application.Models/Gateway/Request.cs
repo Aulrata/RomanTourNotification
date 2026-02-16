@@ -42,6 +42,9 @@ public class Request
     [JsonPropertyName("services")]
     public IEnumerable<InformationServices> Services { get; init; }
 
+    [JsonPropertyName("payments")]
+    public IEnumerable<Payment> Payments { get; init; }
+
     [JsonPropertyName("calc_price")]
     public double? CalcPrice { get; set; }
 
@@ -63,6 +66,8 @@ public class Request
     [JsonPropertyName("company_name_rus")]
     public string CompanyNameRus { get; set; }
 
+    public decimal PaymentDebt { get; set; }
+
     public Request(
         int id,
         int idSystem,
@@ -80,7 +85,8 @@ public class Request
         string managerName,
         string managerMiddleName,
         string paymentDeadlineClient,
-        string companyNameRus)
+        string companyNameRus,
+        IEnumerable<Payment> payments)
     {
         Id = id;
         IdSystem = idSystem;
@@ -98,6 +104,7 @@ public class Request
         ManagerMiddleName = managerMiddleName;
         PaymentDeadlineClient = paymentDeadlineClient;
         CompanyNameRus = companyNameRus;
+        Payments = payments;
         DateRequest = dateRequest;
         Status = (RequestStatus)int.Parse(StatusId);
     }

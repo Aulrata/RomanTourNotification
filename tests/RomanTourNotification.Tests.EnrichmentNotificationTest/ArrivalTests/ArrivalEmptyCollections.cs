@@ -33,7 +33,8 @@ public class ArrivalEmptyCollections
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var requests = new List<Request> { requestWithoutServices };
 
@@ -68,7 +69,8 @@ public class ArrivalEmptyCollections
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var requests = new List<Request> { request };
 
@@ -117,7 +119,8 @@ public class ArrivalEmptyCollections
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var requests = new List<Request> { request };
 
@@ -160,7 +163,8 @@ public class ArrivalEmptyCollections
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var requests = new List<Request> { request };
 
@@ -200,7 +204,8 @@ public class ArrivalEmptyCollections
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var requests = new List<Request> { request };
 

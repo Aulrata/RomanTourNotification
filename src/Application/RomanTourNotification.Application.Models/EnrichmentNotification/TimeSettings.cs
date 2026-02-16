@@ -9,4 +9,8 @@ public class TimeSettings
     public int ReturnHoursUtc { get; init; }
 
     public int ReturnMinute { get; init; }
+
+    public int ReceiptHoursUtc { get; init; }
+
+    public int ReceiptMinutes { get; init; }
 }

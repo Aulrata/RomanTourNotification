@@ -29,6 +29,9 @@ public class AddGroupTypeHandler : CommandHandler
                 InlineKeyboardButton.WithCallbackData(
                     $"{GroupType.Return.GetDescription()}",
                     $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.Return}"),
+                InlineKeyboardButton.WithCallbackData(
+                    $"{GroupType.Receipt.GetDescription()}",
+                    $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.Receipt}"),
             ],
             [
                 InlineKeyboardButton.WithCallbackData(

@@ -12,6 +12,7 @@ using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Contracts.Messages;
 using RomanTourNotification.Application.Contracts.NotificationService;
 using RomanTourNotification.Application.Contracts.PaymentNotification;
+using RomanTourNotification.Application.Contracts.ReceiptNotification;
 using RomanTourNotification.Application.Contracts.ReturnNotification;
 using RomanTourNotification.Application.Contracts.Users;
 using RomanTourNotification.Application.DownloadData;
@@ -22,6 +23,7 @@ using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.GoogleSheets;
 using RomanTourNotification.Application.NotificationService;
 using RomanTourNotification.Application.PaymentNotification;
+using RomanTourNotification.Application.ReceiptNotification;
 using RomanTourNotification.Application.ReturnNotification;
 using RomanTourNotification.Application.Users;
 
@@ -49,6 +51,14 @@ public static class ServiceCollectionExtensions
             ILogger<LoadEmployees> logger = p.GetRequiredService<ILogger<LoadEmployees>>();
 
             return new LoadEmployees(gateway, apiSettings, logger);
+        });
+        collection.AddScoped<ILoadBills, LoadBills>(p =>
+        {
+            IEnumerable<ApiSettings> apiSettings = p.GetRequiredService<IOptions<List<ApiSettings>>>().Value;
+            IGatewayService gateway = p.GetRequiredService<IGatewayService>();
+            ILogger<LoadBills> logger = p.GetRequiredService<ILogger<LoadBills>>();
+
+            return new LoadBills(logger, gateway, apiSettings);
         });
 
         collection.AddScoped<SheetsService>(p =>
@@ -88,6 +98,7 @@ public static class ServiceCollectionExtensions
         collection.AddScoped<IPaymentNotificationService, PaymentNotificationService>();
         collection.AddScoped<IEnrichmentNotificationService, EnrichmentNotificationService>();
         collection.AddScoped<INotificationService, TelegramService>();
+        collection.AddScoped<IReceiptNotificationService, ReceiptNotificationService>();
         collection.AddScoped<IMessageHandlerService, MessageHandlerService>();
         collection.AddScoped<IFilterEnrichmentNotificationService, FilterEnrichmentNotificationService>();
         return collection;

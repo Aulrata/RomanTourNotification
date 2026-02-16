@@ -16,4 +16,15 @@ public interface IGatewayService
         string key,
         CancellationToken cancellationToken,
         string format = "json");
+
+    public Task<IEnumerable<Bill>> GetAllBillsAsync(
+        string key,
+        CancellationToken cancellationToken,
+        string format = "json");
+
+    public Task<ContextDto> GetRequestByIdAsync(
+        string key,
+        CancellationToken cancellationToken,
+        int id,
+        string format = "json");
 }
