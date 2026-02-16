@@ -90,6 +90,7 @@ public class ReceiptNotificationService : IReceiptNotificationService
         IEnumerable<Bill> bills = (await _loadBills.GetLoadedBillsAsync(cancellationToken)).ToList();
         IEnumerable<LoadedData> loadedDataList = await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
         List<Request> filteredRequests = [];
+        CultureInfo invariantCulture = CultureInfo.InvariantCulture;
 
         _logger.LogInformation("Start creating client receipt message");
         foreach (LoadedData loadedData in loadedDataList)
@@ -116,10 +117,14 @@ public class ReceiptNotificationService : IReceiptNotificationService
             {
                 IEnumerable<Bill> billsByRequest = bills
                     .Where(b => b.RequestId == request.Id &&
-                                b.GetDate.Date != DateTime.Today.Date)
+                                b.GetDate.Date.AddDays(1) < DateTime.Today.Date)
                     .Select(b =>
                     {
-                        b.Price = b.Price.Replace('.', ',');
+                        if (decimal.TryParse(b.Price, NumberStyles.Any, invariantCulture, out decimal price))
+                        {
+                            b.PriceDecimal = price;
+                        }
+
                         return b;
                     });
 
@@ -127,7 +132,7 @@ public class ReceiptNotificationService : IReceiptNotificationService
                     .Where(p => p.PaymentType == PaymentType.Client)
                     .Sum(p => p.Price);
 
-                decimal billSum = billsByRequest.Sum(b => b.GetPrice);
+                decimal billSum = billsByRequest.Sum(b => b.PriceDecimal);
 
                 request.PaymentDebt = billSum - paymentSum;
                 if (request.PaymentDebt <= 0)

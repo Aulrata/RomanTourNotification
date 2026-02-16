@@ -22,6 +22,8 @@ public class Bill
     [JsonPropertyName("price")]
     public string Price { get; set; }
 
+    public decimal PriceDecimal { get; set; }
+
     [JsonPropertyName("created_at")]
     public string CreatedAt { get; init; }
 
@@ -35,8 +37,6 @@ public class Bill
         Price = price;
         CreatedAt = createdAt;
     }
-
-    public decimal GetPrice => decimal.TryParse(Price, out decimal price) ? price : 0;
 
     public DateTime GetDate => DateTime.TryParse(Date, out DateTime date) ? date : DateTime.Today;
 }
