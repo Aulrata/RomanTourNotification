@@ -38,6 +38,8 @@ public static class ConfigurationServiceExtension
                     Minutes = timeSettings.Minutes,
                     ReturnHoursUtc = timeSettings.ReturnHoursUtc,
                     ReturnMinute = timeSettings.ReturnMinute,
+                    ReceiptHoursUtc = timeSettings.ReceiptHoursUtc,
+                    ReceiptMinutes = timeSettings.ReceiptMinutes,
                 };
             });
 

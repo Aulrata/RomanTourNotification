@@ -38,6 +38,12 @@ public class NotificationsBackgroundService : BackgroundService
                 if (DateTime.UtcNow.Hour == _timeSettings.HoursUtc && DateTime.UtcNow.Minute == _timeSettings.Minutes)
                     await _notificationService.SendNotificationAsync(stoppingToken);
 
+                if (DateTime.UtcNow.Hour == _timeSettings.ReceiptHoursUtc
+                    && DateTime.UtcNow.Minute == _timeSettings.ReceiptMinutes)
+                {
+                    await _notificationService.SendReceiptNotificationAsync(stoppingToken);
+                }
+
                 if (DateTime.UtcNow.Hour == _timeSettings.ReturnHoursUtc
                     && DateTime.UtcNow.Minute == _timeSettings.ReturnMinute
                     && DateTime.Today.DayOfWeek is DayOfWeek.Wednesday)

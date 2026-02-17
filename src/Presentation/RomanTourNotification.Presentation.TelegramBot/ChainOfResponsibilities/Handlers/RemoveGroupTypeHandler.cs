@@ -18,24 +18,39 @@ public class RemoveGroupTypeHandler : CommandHandler
             return;
         }
 
-        var keyboard = new InlineKeyboardMarkup([
+        long groupId = context.Iterator.ObjectId;
+        var group = (await context.HandlerServices.GroupService.GetAllGroupTypesByIdAsync(groupId, context.CancellationToken)).ToList();
+
+        List<InlineKeyboardButton> buttons = [];
+
+        InlineKeyboardMarkup keyboard;
+        if (group.Count != 0)
+        {
+            buttons.AddRange(group.Select(groupType => InlineKeyboardButton.WithCallbackData(
+            $"{groupType.GetDescription()}",
+            $"groups choose_group show_group {context.Iterator.ObjectId} remove_group_type {(int)groupType}")));
+
+            keyboard = new InlineKeyboardMarkup(
             [
-                InlineKeyboardButton.WithCallbackData(
-                    $"{GroupType.Arrival.GetDescription()}",
-                    $"groups choose_group show_group {context.Iterator.ObjectId} remove_group_type {(int)GroupType.Arrival}"),
-                InlineKeyboardButton.WithCallbackData(
-                    $"{GroupType.Payment.GetDescription()}",
-                    $"groups choose_group show_group {context.Iterator.ObjectId} remove_group_type {(int)GroupType.Payment}"),
-                InlineKeyboardButton.WithCallbackData(
-                    $"{GroupType.Return.GetDescription()}",
-                    $"groups choose_group show_group {context.Iterator.ObjectId} remove_group_type {(int)GroupType.Return}"),
-            ],
+                buttons,
+                [
+                    InlineKeyboardButton.WithCallbackData(
+                        "Назад",
+                        $"groups choose_group show_group {context.Iterator.ObjectId}"),
+                ]
+            ]);
+        }
+        else
+        {
+            keyboard = new InlineKeyboardMarkup(
             [
-                InlineKeyboardButton.WithCallbackData(
-                    "Назад",
-                    $"groups choose_group show_group {context.Iterator.ObjectId}"),
-            ]
-        ]);
+                [
+                    InlineKeyboardButton.WithCallbackData(
+                        "У группы нет типов (назад)",
+                        $"groups choose_group show_group {context.Iterator.ObjectId}"),
+                ]
+            ]);
+        }
 
         if (context.Iterator.CountOfCommand > 5)
         {

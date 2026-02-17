@@ -40,6 +40,7 @@ public class Flights
         return flightsType.ToLower() switch
         {
             "блок мест" => FlightsType.BlockOfSeats,
+            "блок" => FlightsType.BlockOfSeats,
             _ => FlightsType.Unspecified,
         };
     }

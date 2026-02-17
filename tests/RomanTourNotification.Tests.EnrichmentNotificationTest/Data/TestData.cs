@@ -36,6 +36,7 @@ public static class TestData
         var flight2 = new Flights(2, "2025-04-25", "2025-04-26", "2", string.Empty);
         var flight3 = new Flights(3, "2025-04-29", "2025-04-29", "2", string.Empty);
         var flight4 = new Flights(4, "2025-04-29", "2025-04-30", "2", string.Empty);
+        var payment = new Payment(1, string.Empty, string.Empty, 1, 1);
 
         var service1 = new InformationServices(
             1,
@@ -70,7 +71,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment> { payment });
 
         var request2 = new Request(
             2,
@@ -89,7 +91,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment> { payment });
 
         var request3 = new Request(
             3,
@@ -108,7 +111,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment> { payment });
 
         return new List<Request> { request1, request2, request3 };
     }
@@ -132,7 +136,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var request2 = new Request(
             2,
@@ -151,7 +156,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var request3 = new Request(
             3,
@@ -170,7 +176,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var request4 = new Request(
             4,
@@ -189,7 +196,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var request5 = new Request(
             5,
@@ -208,7 +216,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         return new List<Request> { request1, request2, request3, request4, request5 };
     }
@@ -252,7 +261,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var request2 = new Request(
             2,
@@ -271,7 +281,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var request3 = new Request(
             2,
@@ -290,7 +301,8 @@ public static class TestData
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         return new List<Request> { request1, request2, request3 };
     }
