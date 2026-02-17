@@ -117,7 +117,7 @@ public class ReceiptNotificationService : IReceiptNotificationService
             {
                 IEnumerable<Bill> billsByRequest = bills
                     .Where(b => b.RequestId == request.Id &&
-                                b.GetDate.Date.AddDays(1) < DateTime.Today.Date)
+                                b.GetDate.Date != DateTime.Today.Date)
                     .Select(b =>
                     {
                         if (decimal.TryParse(b.Price, NumberStyles.Any, invariantCulture, out decimal price))
