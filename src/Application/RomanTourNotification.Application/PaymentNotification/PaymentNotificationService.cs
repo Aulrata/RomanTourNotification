@@ -135,7 +135,7 @@ public class PaymentNotificationService : IPaymentNotificationService
         }
 
         _groupings = requestsWithClientDebt.GroupBy(r => r.ManagerFullName);
-        _lastUpdateDate = DateTime.Today.Date;
+        _lastUpdateDate = dateDto.From.Date;
     }
 
     private string GetPaymentInformation(Request request)
