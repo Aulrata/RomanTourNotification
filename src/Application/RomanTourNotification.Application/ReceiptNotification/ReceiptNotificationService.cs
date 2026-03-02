@@ -16,6 +16,7 @@ public class ReceiptNotificationService : IReceiptNotificationService
     private readonly ILoadBills _loadBills;
     private readonly ILoadDataService _loadDataService;
     private string _currentUrl = string.Empty;
+    private bool _haveReceipts = false;
 
     public ReceiptNotificationService(
         ILoadBills loadBills,
@@ -30,12 +31,12 @@ public class ReceiptNotificationService : IReceiptNotificationService
     public async Task<string> GetReceiptMessageAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
         var builder = new StringBuilder();
-
+        _haveReceipts = false;
         await GetClientReceiptMessageAsync(dateDto, builder, cancellationToken);
         builder.AppendLine();
         await GetCloseReceiptMessageAsync(dateDto, builder, cancellationToken);
 
-        if (builder.Length == 2)
+        if (!_haveReceipts)
         {
             builder.Clear();
             builder.AppendLine("Нет чеков");
@@ -68,7 +69,7 @@ public class ReceiptNotificationService : IReceiptNotificationService
                 continue;
 
             builder.Append("<u>Нет закрывающих чеков</u>\n");
-
+            _haveReceipts = true;
             foreach (Request request in filteredRequests)
             {
                 string message = $"""
@@ -146,7 +147,7 @@ public class ReceiptNotificationService : IReceiptNotificationService
             return;
 
         builder.Append("<u>Нет чека клиентам</u>\n");
-
+        _haveReceipts = true;
         var ruCulture = new CultureInfo("ru-RU");
         foreach (Request request in filteredRequests)
         {
