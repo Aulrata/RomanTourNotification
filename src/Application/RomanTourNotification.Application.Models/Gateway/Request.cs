@@ -46,10 +46,10 @@ public class Request
     public IEnumerable<Payment> Payments { get; init; }
 
     [JsonPropertyName("calc_price")]
-    public double? CalcPrice { get; set; }
+    public decimal? CalcPrice { get; set; }
 
     [JsonPropertyName("calc_client")]
-    public double? CalcClient { get; set; }
+    public decimal? CalcClient { get; set; }
 
     [JsonPropertyName("manager_surname")]
     public string ManagerSurname { get; set; }
@@ -118,7 +118,7 @@ public class Request
     public DateTime? DatePaymentDeadline => DateTime.
         TryParse(PaymentDeadlineClient, out DateTime result) ? result.Date : null;
 
-    public double ClientDebt => (CalcPrice ?? 0.00) - (CalcClient ?? 0.00);
+    public decimal ClientDebt => Math.Round((CalcPrice ?? 0.00m) - (CalcClient ?? 0.00m), 3);
 
     public string ManagerFullName => $"{ManagerSurname} {ManagerName} {ManagerMiddleName}";
 
