@@ -66,7 +66,7 @@ public class LoadDataService : ILoadDataService
                 if (request is not null)
                     requests.Add(request);
 
-                await Task.Delay(600, token);
+                await Task.Delay(800, token);
             });
 
         return requests;

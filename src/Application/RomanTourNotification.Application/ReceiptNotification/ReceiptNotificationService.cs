@@ -116,6 +116,7 @@ public class ReceiptNotificationService : IReceiptNotificationService
 
             foreach (Request request in fullRequestList)
             {
+                _logger.LogDebug($"Request {request.Id}: CalcPrice={request.CalcPrice}, CalcClient={request.CalcClient}, ClientDebt={request.ClientDebt}");
                 IEnumerable<Bill> billsByRequest = bills
                     .Where(b => b.RequestId == request.Id &&
                                 b.GetDate.Date != DateTime.Today.Date)
