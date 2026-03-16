@@ -37,7 +37,7 @@ public class LoadDataService : ILoadDataService
 
     public async Task<IEnumerable<LoadedData>> GetLoadedRequestsAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
-        if (_lastLoadData != DateTime.Today.Date)
+        if (_lastLoadData.AddHours(1) < DateTime.Now)
             await GetAllRequestAsync(dateDto, cancellationToken);
 
         return _loadedData;
@@ -125,6 +125,6 @@ public class LoadDataService : ILoadDataService
             _loadedData.Add(loadData);
         }
 
-        _lastLoadData = DateTime.Today;
+        _lastLoadData = DateTime.Now;
     }
 }
