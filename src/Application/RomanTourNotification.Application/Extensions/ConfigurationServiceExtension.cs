@@ -19,10 +19,14 @@ public static class ConfigurationServiceExtension
         try
         {
             collection.Configure<BotSettings>(configuration.GetSection("BotSettings"));
+            var httpclient = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(300),
+            };
             collection.AddSingleton<ITelegramBotClient>(provide =>
             {
                 BotSettings botSettings = provide.GetRequiredService<IOptions<BotSettings>>().Value;
-                return new TelegramBotClient(botSettings.NotificationBot.Token);
+                return new TelegramBotClient(botSettings.NotificationBot.Token, httpclient);
             });
 
             collection.Configure<ConfigurationService>(configuration.GetSection("ConfigurationService"));
