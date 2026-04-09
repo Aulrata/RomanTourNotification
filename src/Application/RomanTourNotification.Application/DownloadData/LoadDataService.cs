@@ -31,6 +31,7 @@ public class LoadDataService : ILoadDataService
         {
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString,
         };
         _loadedData = [];
     }
