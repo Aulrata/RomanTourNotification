@@ -79,7 +79,8 @@ public class ArrivalRequestTests
             string.Empty,
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            new List<Payment>());
 
         var requests = new List<Request> { requestWithoutServices };
 

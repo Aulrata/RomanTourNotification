@@ -5,7 +5,7 @@
 .idea
 .DS_Store
 /src/RomanTourNotification/credentials.json
-
+/Test
 /deploy
 # User-specific files
 *.rsuser

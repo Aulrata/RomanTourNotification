@@ -42,11 +42,14 @@ public class Request
     [JsonPropertyName("services")]
     public IEnumerable<InformationServices> Services { get; init; }
 
+    [JsonPropertyName("payments")]
+    public IEnumerable<Payment> Payments { get; init; }
+
     [JsonPropertyName("calc_price")]
-    public double? CalcPrice { get; set; }
+    public decimal? CalcPrice { get; set; }
 
     [JsonPropertyName("calc_client")]
-    public double? CalcClient { get; set; }
+    public decimal? CalcClient { get; set; }
 
     [JsonPropertyName("manager_surname")]
     public string ManagerSurname { get; set; }
@@ -62,6 +65,8 @@ public class Request
 
     [JsonPropertyName("company_name_rus")]
     public string CompanyNameRus { get; set; }
+
+    public decimal PaymentDebt { get; set; }
 
     public Request(
         int id,
@@ -80,7 +85,8 @@ public class Request
         string managerName,
         string managerMiddleName,
         string paymentDeadlineClient,
-        string companyNameRus)
+        string companyNameRus,
+        IEnumerable<Payment> payments)
     {
         Id = id;
         IdSystem = idSystem;
@@ -98,6 +104,7 @@ public class Request
         ManagerMiddleName = managerMiddleName;
         PaymentDeadlineClient = paymentDeadlineClient;
         CompanyNameRus = companyNameRus;
+        Payments = payments;
         DateRequest = dateRequest;
         Status = (RequestStatus)int.Parse(StatusId);
     }
@@ -111,7 +118,7 @@ public class Request
     public DateTime? DatePaymentDeadline => DateTime.
         TryParse(PaymentDeadlineClient, out DateTime result) ? result.Date : null;
 
-    public double ClientDebt => (CalcPrice ?? 0.00) - (CalcClient ?? 0.00);
+    public decimal ClientDebt => Math.Round((CalcPrice ?? 0.00m) - (CalcClient ?? 0.00m), 3);
 
     public string ManagerFullName => $"{ManagerSurname} {ManagerName} {ManagerMiddleName}";
 

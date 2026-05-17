@@ -4,6 +4,7 @@ using RomanTourNotification.Application.Contracts.Gateway;
 using RomanTourNotification.Application.Models.DownloadData;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
+using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -30,16 +31,46 @@ public class LoadDataService : ILoadDataService
         {
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString,
         };
         _loadedData = [];
     }
 
     public async Task<IEnumerable<LoadedData>> GetLoadedRequestsAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
-        if (_lastLoadData != DateTime.Today.Date)
+        if (_lastLoadData.AddHours(1) < DateTime.Now)
             await GetAllRequestAsync(dateDto, cancellationToken);
 
         return _loadedData;
+    }
+
+    public async Task<IEnumerable<Request>> GetRequestsByIdsAsync(ConcurrentBag<int> ids, CancellationToken cancellationToken)
+    {
+        ConcurrentBag<Request> requests = [];
+
+        var options = new ParallelOptions()
+        {
+            MaxDegreeOfParallelism = 5,
+            CancellationToken = cancellationToken,
+        };
+
+        await Parallel.ForEachAsync(
+            ids,
+            options,
+            async (id, token) =>
+            {
+                ContextDto context = await _gatewayService.GetRequestByIdAsync(_apiSettings.First().Api, token, id);
+
+                RootRequest? rootRequest = JsonSerializer.Deserialize<RootRequest>(context.Stream, _jsonSerializerOptions);
+
+                Request? request = rootRequest?.Request.FirstOrDefault();
+                if (request is not null)
+                    requests.Add(request);
+
+                await Task.Delay(800, token);
+            });
+
+        return requests;
     }
 
     private async Task GetAllRequestAsync(DateDto dateDto, CancellationToken cancellationToken)
@@ -95,6 +126,6 @@ public class LoadDataService : ILoadDataService
             _loadedData.Add(loadData);
         }
 
-        _lastLoadData = DateTime.Today;
+        _lastLoadData = DateTime.Now;
     }
 }

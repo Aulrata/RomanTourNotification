@@ -15,4 +15,7 @@ public enum GroupType
 
     [Description("Возвраты")]
     Return = 3,
+
+    [Description("Чеки")]
+    Receipt = 4,
 }

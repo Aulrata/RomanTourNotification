@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Contracts.Messages;
 using RomanTourNotification.Application.Contracts.NotificationService;
+using RomanTourNotification.Application.Contracts.ReceiptNotification;
 using RomanTourNotification.Application.Contracts.ReturnNotification;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Groups;
@@ -17,19 +18,22 @@ public class TelegramService : INotificationService
     private readonly IMessageHandlerService _messageHandlerService;
     private readonly ITelegramBotClient _botClient;
     private readonly IReturnNotificationService _returnNotificationService;
+    private readonly IReceiptNotificationService _receiptNotificationService;
 
     public TelegramService(
         ILogger<TelegramService> logger,
         IGroupService groupService,
         IMessageHandlerService messageHandlerService,
         ITelegramBotClient botClient,
-        IReturnNotificationService returnNotificationService)
+        IReturnNotificationService returnNotificationService,
+        IReceiptNotificationService receiptNotificationService)
     {
         _logger = logger;
         _groupService = groupService;
         _messageHandlerService = messageHandlerService;
         _botClient = botClient;
         _returnNotificationService = returnNotificationService;
+        _receiptNotificationService = receiptNotificationService;
     }
 
     public async Task SendNotificationAsync(CancellationToken cancellationToken)
@@ -76,6 +80,9 @@ public class TelegramService : INotificationService
                 await SendReturnNotificationAsync(groupList, cancellationToken);
                 await SendDailyReturnNotificationAsync(groupList, cancellationToken);
                 break;
+            case GroupType.Receipt:
+                await SendReceiptNotificationAsync(cancellationToken);
+                break;
         }
     }
 
@@ -92,6 +99,39 @@ public class TelegramService : INotificationService
         var returnGroups = groups.Where(x => x.GroupType == GroupType.Return).ToList();
 
         await SendReturnNotificationAsync(returnGroups, cancellationToken);
+    }
+
+    public async Task SendReceiptNotificationAsync(CancellationToken cancellationToken, Group? forcedGroup = null)
+    {
+        if (forcedGroup is null)
+        {
+            var groups = (await _groupService.GetAllWorksGroupsAsync(cancellationToken))
+                .Where(g => g.GroupType == GroupType.Receipt)
+                .ToList();
+
+            if (groups.Count == 0)
+            {
+                _logger.LogInformation("No groups found");
+                return;
+            }
+
+            foreach (Group group in groups)
+            {
+                string message = await _receiptNotificationService.GetReceiptMessageAsync(
+                    new DateDto(DateTime.Today),
+                    cancellationToken);
+
+                await SendNotificationAsync(message, group, cancellationToken);
+            }
+        }
+        else
+        {
+            string message = await _receiptNotificationService.GetReceiptMessageAsync(
+                new DateDto(DateTime.Today),
+                cancellationToken);
+
+            await SendNotificationAsync(message, forcedGroup, cancellationToken);
+        }
     }
 
     private async Task SendDailyReturnNotificationAsync(
@@ -141,24 +181,9 @@ public class TelegramService : INotificationService
 
         foreach (Group group in groups)
         {
-            try
-            {
-                string message =
-                    await _messageHandlerService.CreateArrivalMessageAsync(currentDay, group, cancellationToken);
+            string message = await _messageHandlerService.CreateArrivalMessageAsync(currentDay, group, cancellationToken);
 
-                await _botClient.SendMessage(
-                    group.ChatId,
-                    message,
-                    cancellationToken: cancellationToken,
-                    parseMode: ParseMode.Html);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    "Failed to send arrival notification to group: {Title}. {Message}",
-                    group.Title,
-                    ex.Message);
-            }
+            await SendNotificationAsync(message, group, cancellationToken);
         }
     }
 
@@ -178,21 +203,7 @@ public class TelegramService : INotificationService
             string message =
                 await _messageHandlerService.CreatePaymentMessageAsync(currentDay, group, cancellationToken);
 
-            try
-            {
-                await _botClient.SendMessage(
-                    group.ChatId,
-                    message,
-                    cancellationToken: cancellationToken,
-                    parseMode: ParseMode.Html);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    "Failed to send payment notification to group: {Title}. {Message}",
-                    group.Title,
-                    ex.Message);
-            }
+            await SendNotificationAsync(message, group, cancellationToken);
         }
     }
 
@@ -211,23 +222,37 @@ public class TelegramService : INotificationService
             string managerLastName = group.ManagerFullname.Split(' ')[0];
             string message = await _returnNotificationService.GetReturnMessageAsync(managerLastName, cancellationToken);
 
-            try
-            {
-                await _botClient.SendMessage(
-                    group.ChatId,
-                    message,
-                    cancellationToken: cancellationToken,
-                    parseMode: ParseMode.Html);
+            await SendNotificationAsync(message, group, cancellationToken);
+        }
+    }
 
-                _logger.LogInformation("Send return message for group: {Title}", group.Title);
-            }
-            catch (Exception ex)
+    private async Task SendNotificationAsync(string message, Group group, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (message.Length > 8096)
             {
-                _logger.LogError(
-                    "Failed to send return notification to group: {Title}. {Message}",
-                    group.Title,
-                    ex.Message);
+                _logger.LogWarning("Message too long: {Length} chars", message.Length);
+                message = message.Substring(0, 4093) + "...";
             }
+
+            await _botClient.SendMessage(
+                group.ChatId,
+                message,
+                cancellationToken: cancellationToken,
+                parseMode: ParseMode.Html);
+
+            _logger.LogInformation("Send return message for group: {Title}", group.Title);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to send arrival notification to group: {Title}. ChatId: {ChatId}. Message: {Message}. InnerException: {InnerException}",
+                group.Title,
+                group.ChatId,
+                ex.Message,
+                ex.InnerException?.Message ?? "None");
         }
     }
 }

@@ -12,4 +12,5 @@ public enum RequestStatus
     ApplicationInLid = 9,
     PartiallyPaid = 10,
     FullPayment = 11,
+    Test = 20,
 }

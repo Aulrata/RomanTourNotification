@@ -42,7 +42,7 @@ public class PaymentNotificationService : IPaymentNotificationService
 
     private void GetAllPaymentMessagesAsync(StringBuilder sb, CancellationToken cancellationToken)
     {
-        var managerData = _groupings.ToList(); // TODO: Почему-то при втором вызове пусто в рамках одной программы.
+        var managerData = _groupings.ToList();
 
         _logger.LogInformation("The formation of a message for all payments has begun.");
 
@@ -135,7 +135,7 @@ public class PaymentNotificationService : IPaymentNotificationService
         }
 
         _groupings = requestsWithClientDebt.GroupBy(r => r.ManagerFullName);
-        _lastUpdateDate = DateTime.Today.Date;
+        _lastUpdateDate = dateDto.From.Date;
     }
 
     private string GetPaymentInformation(Request request)
