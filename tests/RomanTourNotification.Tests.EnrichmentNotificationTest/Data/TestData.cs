@@ -2,10 +2,12 @@ using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.Gateway;
 using RomanTourNotification.Application.DownloadData;
+using RomanTourNotification.Application.DownloadData.Cache;
 using RomanTourNotification.Application.EnrichmentNotification;
-using RomanTourNotification.Application.Gateway;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
+using RomanTourNotification.Infrastructure.Integrations.Gateway;
+using RomanTourNotification.Tests.EnrichmentNotificationTest.Fakes;
 
 namespace RomanTourNotification.Tests.EnrichmentNotificationTest.Data;
 
@@ -16,11 +18,14 @@ public static class TestData
         IEnumerable<ApiSettings> api = [new()];
         IGatewayService gateway = new GatewayService(new HttpClient(), new Logger<GatewayService>(new LoggerFactory()));
 
-        ILoadDataService loadDataService =
-            new LoadDataService(gateway, new Logger<LoadDataService>(new LoggerFactory()), api);
+        ILoadDataService loadDataService = new LoadDataService(
+            gateway,
+            new Logger<LoadDataService>(new LoggerFactory()),
+            api,
+            new LoadDataCache(),
+            new FakeClock());
 
         return new EnrichmentNotificationService(
-            new Logger<EnrichmentNotificationService>(new LoggerFactory()),
             loadDataService,
             new FilterEnrichmentNotificationService());
     }

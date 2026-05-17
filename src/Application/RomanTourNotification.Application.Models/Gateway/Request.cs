@@ -1,3 +1,4 @@
+using RomanTourNotification.Domain.ValueObjects;
 using System.Text.Json.Serialization;
 
 namespace RomanTourNotification.Application.Models.Gateway;
@@ -122,5 +123,5 @@ public class Request
 
     public string ManagerFullName => $"{ManagerSurname} {ManagerName} {ManagerMiddleName}";
 
-    public string CompanyNameShort => CompanyNameRus.Split(' ')[1];
+    public string CompanyNameShort => new CompanyName(CompanyNameRus).ShortName;
 }

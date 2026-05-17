@@ -1,1 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Domain\RomanTourNotification.Domain\RomanTourNotification.Domain.csproj"/>
+    </ItemGroup>
+
+</Project>

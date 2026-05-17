@@ -1,10 +1,10 @@
-using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.EnrichmentNotification;
 using RomanTourNotification.Application.Models.DownloadData;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Extensions;
 using RomanTourNotification.Application.Models.Gateway;
+using RomanTourNotification.Domain.ValueObjects;
 using System.Net;
 using System.Text;
 
@@ -12,127 +12,132 @@ namespace RomanTourNotification.Application.EnrichmentNotification;
 
 public class EnrichmentNotificationService : IEnrichmentNotificationService
 {
-    private readonly ILogger<EnrichmentNotificationService> _logger;
     private readonly ILoadDataService _loadDataService;
-    private readonly IFilterEnrichmentNotificationService _filterEnrichmentNotificationService;
-    private string _currentUrl = string.Empty;
+    private readonly IFilterEnrichmentNotificationService _filterService;
 
     public EnrichmentNotificationService(
-        ILogger<EnrichmentNotificationService> logger,
         ILoadDataService loadDataService,
-        IFilterEnrichmentNotificationService filterEnrichmentNotificationService)
+        IFilterEnrichmentNotificationService filterService)
     {
-        _logger = logger;
         _loadDataService = loadDataService;
-        _filterEnrichmentNotificationService = filterEnrichmentNotificationService;
+        _filterService = filterService;
     }
 
-    public async Task GetArrivalByDateAsync(
+    /// <inheritdoc/>
+    public async Task GetDocumentsForDepartureAsync(
         DateDto dateDto,
         StringBuilder sb,
         string managerFullname,
         CancellationToken cancellationToken)
     {
-        IEnumerable<LoadedData> loadedData = await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
+        IEnumerable<LoadedData> loadedData =
+            await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
 
-        string greetings = $"""
-                             Доброе утро!
-                            <b><u>Выписка документов на {dateDto.From.Date:dd.MM.yyyy}</u></b>.
+        sb.AppendLine($"""
+                        Доброе утро!
+                       <b><u>Документы на вылет на {dateDto.From.Date:dd.MM.yyyy}</u></b>.
 
-                            """;
+                       """);
 
-        bool isDocs = false;
-
-        sb.AppendLine(greetings);
+        bool hasDocs = false;
 
         foreach (LoadedData loadData in loadedData)
         {
             if (loadData.Requests is null)
                 continue;
 
-            IEnumerable<IGrouping<string, Request>> groupLists = loadData.Requests
-                    .GroupBy(r => r.CompanyNameRus)
-                    .Where(g => !string.IsNullOrEmpty(g.Key));
-
-            _currentUrl = loadData.Url;
-
-            foreach (IGrouping<string, Request> groupList in groupLists)
+            foreach (IGrouping<string, Request> groupList in GroupByCompany(loadData.Requests))
             {
-                _filterEnrichmentNotificationService.SetData(dateDto, groupList, managerFullname);
+                var docs = _filterService
+                    .GetDateBeginInSomeDays(dateDto, groupList, managerFullname)
+                    .ToList();
 
-                _logger.LogInformation("Start combine notify message");
-
-                var dateBeginInSomeDays = _filterEnrichmentNotificationService.GetDateBeginInSomeDays().ToList();
-                var dateBeginTomorrow = _filterEnrichmentNotificationService.GetBeginTomorrow().ToList();
-                var dateEndTomorrow = _filterEnrichmentNotificationService.GetEndTomorrow().ToList();
-
-                if (dateBeginInSomeDays.Count == 0
-                    && dateBeginTomorrow.Count == 0
-                    && dateEndTomorrow.Count == 0)
-                {
+                if (docs.Count == 0)
                     continue;
-                }
 
-                // Отключил, т.к. перешли в один юон
-                // sb.AppendLine($"{loadData.Name}\n");
-                sb.AppendLine($"ИП {groupList.Key.Split(' ')[1]}\n");
+                sb.AppendLine($"ИП {new CompanyName(groupList.Key).ShortName}\n");
+                hasDocs = true;
 
-                isDocs = true;
-
-                FillDocuments(sb, dateBeginInSomeDays);
-
-                FillTickets(sb, dateBeginTomorrow, dateEndTomorrow);
+                sb.AppendLine("Документы на вылет: ");
+                foreach (Request request in docs)
+                    sb.AppendLine(FormatRequest(request, loadData.Url));
             }
         }
 
-        if (!isDocs)
+        if (!hasDocs)
             sb.AppendLine("Сегодня нет документов для отправки клиентам.\n");
     }
 
-    private void FillDocuments(StringBuilder sb, List<Request> requests)
+    /// <inheritdoc/>
+    public async Task GetAirTicketsAsync(
+        DateDto dateDto,
+        StringBuilder sb,
+        string managerFullname,
+        CancellationToken cancellationToken)
     {
-        if (requests.Count <= 0) return;
+        IEnumerable<LoadedData> loadedData =
+            await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
 
-        sb.AppendLine("Документы на вылет: ");
+        sb.AppendLine($"""
+                        Доброе утро!
+                       <b><u>Авиабилеты на {dateDto.From.Date:dd.MM.yyyy}</u></b>.
 
-        foreach (Request request in requests)
-            sb.AppendLine(GetRequestInformation(request));
+                       """);
+
+        bool hasTickets = false;
+
+        foreach (LoadedData loadData in loadedData)
+        {
+            if (loadData.Requests is null)
+                continue;
+
+            foreach (IGrouping<string, Request> groupList in GroupByCompany(loadData.Requests))
+            {
+                var beginTomorrow = _filterService
+                    .GetBeginTomorrow(dateDto, groupList, managerFullname)
+                    .ToList();
+
+                var endTomorrow = _filterService
+                    .GetEndTomorrow(dateDto, groupList, managerFullname)
+                    .ToList();
+
+                if (beginTomorrow.Count == 0 && endTomorrow.Count == 0)
+                    continue;
+
+                sb.AppendLine($"ИП {new CompanyName(groupList.Key).ShortName}\n");
+                hasTickets = true;
+
+                sb.AppendLine("Авиабилеты: ");
+                foreach (Request request in beginTomorrow)
+                    sb.AppendLine(FormatRequest(request, loadData.Url));
+                foreach (Request request in endTomorrow)
+                    sb.AppendLine(FormatRequest(request, loadData.Url));
+            }
+        }
+
+        if (!hasTickets)
+            sb.AppendLine("Сегодня нет авиабилетов для отправки.\n");
     }
 
-    private void FillTickets(StringBuilder sb, List<Request> dateBeginTomorrow, List<Request> dateEndTomorrow)
+    private static IEnumerable<IGrouping<string, Request>> GroupByCompany(IEnumerable<Request> requests)
     {
-        if (dateBeginTomorrow.Count <= 0 && dateEndTomorrow.Count <= 0) return;
-
-        sb.AppendLine("Авиабилеты: ");
-
-        FillAirTicketsTomorrowBegin(sb, dateBeginTomorrow);
-
-        FillAirTicketsTomorrowEnd(sb, dateEndTomorrow);
+        return requests
+            .GroupBy(r => r.CompanyNameRus)
+            .Where(g => !string.IsNullOrEmpty(g.Key));
     }
 
-    private void FillAirTicketsTomorrowBegin(StringBuilder sb, List<Request> requests)
+    private static string FormatRequest(Request request, string baseUrl)
     {
-        foreach (Request request in requests)
-            sb.AppendLine(GetRequestInformation(request));
-    }
-
-    private void FillAirTicketsTomorrowEnd(StringBuilder sb, List<Request> requests)
-    {
-        foreach (Request request in requests)
-            sb.AppendLine(GetRequestInformation(request));
-    }
-
-    private string GetRequestInformation(Request request)
-    {
-        InformationServices? airTickerService =
+        InformationServices? airTicketService =
             request.Services.FirstOrDefault(s => s.InformationServiceType == InformationServiceType.AirTicket);
-        FlightsType flightType = airTickerService?.Flights.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified;
+        FlightsType flightType =
+            airTicketService?.Flights.FirstOrDefault()?.FlightsType ?? FlightsType.Unspecified;
 
         string type = flightType.GetDescription();
         string tourOperator = WebUtility.HtmlDecode(request.SupplierName);
 
         return $"""
-                Id: <a href="{_currentUrl}{request.IdSystem}">{request.IdSystem}</a>, 
+                Id: <a href="{baseUrl}{request.IdSystem}">{request.IdSystem}</a>, 
                 ФИО: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}, 
                 Дата вылета: <b>{request.DateBegin}</b>., 
                 Тип самолета: {type}, 

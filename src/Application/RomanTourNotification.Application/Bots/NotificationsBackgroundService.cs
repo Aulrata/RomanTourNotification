@@ -1,59 +1,57 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RomanTourNotification.Application.Contracts.NotificationService;
-using RomanTourNotification.Application.Models.EnrichmentNotification;
+using RomanTourNotification.Application.Abstractions.Time;
+using RomanTourNotification.Application.Contracts.Notifications;
 
 namespace RomanTourNotification.Application.Bots;
 
+/// <summary>
+/// Polls once per minute and delegates to every registered <see cref="IScheduledNotification"/>.
+/// Each implementation decides for itself whether it should fire (time, day-of-week, etc.).
+/// </summary>
 public class NotificationsBackgroundService : BackgroundService
 {
     private readonly ILogger<NotificationsBackgroundService> _logger;
-    private readonly TimeSettings _timeSettings;
-    private readonly INotificationService _notificationService;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IClock _clock;
 
+    /// <summary>Initializes a new instance of the <see cref="NotificationsBackgroundService"/> class.</summary>
     public NotificationsBackgroundService(
         ILogger<NotificationsBackgroundService> logger,
-        TimeSettings timeSettings,
-        INotificationService notificationService)
+        IServiceScopeFactory scopeFactory,
+        IClock clock)
     {
         _logger = logger;
-        _timeSettings = timeSettings;
-        _notificationService = notificationService;
+        _scopeFactory = scopeFactory;
+        _clock = clock;
     }
 
+    /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation(
-            "Starting background notification service. With UTC time {HoursUtc}:{Minutes}",
-            _timeSettings.HoursUtc,
-            _timeSettings.Minutes);
+        _logger.LogInformation("Notification background service started");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                if (DateTime.Today.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
-                    continue;
+                DateTime utcNow = _clock.UtcNow;
+                DayOfWeek today = _clock.Today.DayOfWeek;
 
-                if (DateTime.UtcNow.Hour == _timeSettings.HoursUtc && DateTime.UtcNow.Minute == _timeSettings.Minutes)
-                    await _notificationService.SendNotificationAsync(stoppingToken);
+                await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+                IEnumerable<IScheduledNotification> notifications =
+                    scope.ServiceProvider.GetRequiredService<IEnumerable<IScheduledNotification>>();
 
-                if (DateTime.UtcNow.Hour == _timeSettings.ReceiptHoursUtc
-                    && DateTime.UtcNow.Minute == _timeSettings.ReceiptMinutes)
+                foreach (IScheduledNotification notification in notifications)
                 {
-                    await _notificationService.SendReceiptNotificationAsync(stoppingToken);
-                }
-
-                if (DateTime.UtcNow.Hour == _timeSettings.ReturnHoursUtc
-                    && DateTime.UtcNow.Minute == _timeSettings.ReturnMinute
-                    && DateTime.Today.DayOfWeek is DayOfWeek.Wednesday)
-                {
-                    await _notificationService.SendSpecialNotificationAsync(stoppingToken);
+                    if (notification.ShouldSend(utcNow, today))
+                        await notification.SendAsync(stoppingToken);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError(ex, "Background notification service error");
             }
             finally
             {

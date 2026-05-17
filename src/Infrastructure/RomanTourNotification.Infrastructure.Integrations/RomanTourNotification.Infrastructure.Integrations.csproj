@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Application\RomanTourNotification.Application.Contracts\RomanTourNotification.Application.Contracts.csproj"/>
+        <ProjectReference Include="..\..\Application\RomanTourNotification.Application.Models\RomanTourNotification.Application.Models.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Google.Apis.Sheets.v4"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions"/>
+        <PackageReference Include="Telegram.Bot"/>
+    </ItemGroup>
+
+</Project>
