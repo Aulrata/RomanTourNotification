@@ -22,19 +22,21 @@ public class SendNotificationHandler : CommandHandler
             context.Iterator.ObjectId,
             context.CancellationToken);
 
-        IEnumerable<InlineKeyboardButton> buttons = groupTypes
+        IEnumerable<IEnumerable<InlineKeyboardButton>> typeRows = groupTypes
             .Select(groupType => InlineKeyboardButton.WithCallbackData(
                 $"{groupType.GetDescription()}",
-                $"groups choose_group show_group {context.Iterator.ObjectId} send_notification {(int)groupType}"));
+                $"groups choose_group show_group {context.Iterator.ObjectId} send_notification {(int)groupType}"))
+            .Chunk(3);
 
-        var keyboard = new InlineKeyboardMarkup([
-            buttons,
-            [
+        var rows = typeRows
+            .Append([
                 InlineKeyboardButton.WithCallbackData(
                     "Назад",
                     $"groups choose_group show_group {context.Iterator.ObjectId}"),
-            ]
-        ]);
+            ])
+            .ToList();
+
+        var keyboard = new InlineKeyboardMarkup(rows);
 
         if (context.Iterator.CountOfCommand > 5)
         {

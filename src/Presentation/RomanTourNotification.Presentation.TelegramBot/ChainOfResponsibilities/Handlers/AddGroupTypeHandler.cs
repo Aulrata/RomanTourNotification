@@ -21,8 +21,13 @@ public class AddGroupTypeHandler : CommandHandler
         var keyboard = new InlineKeyboardMarkup([
             [
                 InlineKeyboardButton.WithCallbackData(
-                    $"{GroupType.Arrival.GetDescription()}",
-                    $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.Arrival}"),
+                    $"{GroupType.DocumentsForDeparture.GetDescription()}",
+                    $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.DocumentsForDeparture}"),
+                InlineKeyboardButton.WithCallbackData(
+                    $"{GroupType.AirTickets.GetDescription()}",
+                    $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.AirTickets}"),
+            ],
+            [
                 InlineKeyboardButton.WithCallbackData(
                     $"{GroupType.Payment.GetDescription()}",
                     $"groups choose_group show_group {context.Iterator.ObjectId} add_group_type {(int)GroupType.Payment}"),
