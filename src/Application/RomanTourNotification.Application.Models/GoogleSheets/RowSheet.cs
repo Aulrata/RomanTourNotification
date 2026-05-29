@@ -15,17 +15,24 @@ public record RowSheet(
 {
     /// <summary>
     /// Gets the pipeline stage this case is at (Branch B: Sum not empty).
-    /// The switch covers the strict linear progression; any other combination falls back to PendingSend.
+    /// Linear progression: each step requires all previous flags to be true.
     /// </summary>
-    public ReturnStatus Status =>
-        (SentStatementToTourist, GetStatementFromTourist, SentStatementToAccounting, ReceiptPrinted) switch
+    public ReturnStatus Status
+    {
+        get
         {
-            (false, _, _, _) => ReturnStatus.PendingSend,
-            (true, false, _, _) => ReturnStatus.PendingReceive,
-            (true, true, false, _) => ReturnStatus.PendingAccounting,
-            (true, true, true, false) => ReturnStatus.PendingReceipt,
-            (true, true, true, true) => ReturnStatus.Completed,
-        };
+            if (!SentStatementToTourist)
+                return ReturnStatus.PendingSend;
+
+            if (!GetStatementFromTourist)
+                return ReturnStatus.PendingReceive;
+
+            if (!SentStatementToAccounting)
+                return ReturnStatus.PendingAccounting;
+
+            return ReceiptPrinted ? ReturnStatus.Completed : ReturnStatus.PendingReceipt;
+        }
+    }
 
     public override string ToString()
     {
