@@ -29,6 +29,7 @@ using RomanTourNotification.Application.NotificationService;
 using RomanTourNotification.Application.PaymentNotification;
 using RomanTourNotification.Application.ReceiptNotification;
 using RomanTourNotification.Application.ReturnNotification;
+using RomanTourNotification.Application.ReturnNotification.Cache;
 using RomanTourNotification.Application.Time;
 using RomanTourNotification.Application.Users;
 
@@ -42,6 +43,7 @@ public static class ServiceCollectionExtensions
     {
         collection.AddSingleton<IClock, SystemClock>();
         collection.AddSingleton<LoadDataCache>();
+        collection.AddSingleton<ReturnDataCache>();
 
         collection.AddScoped<IUserService, UserService>();
         collection.AddScoped<IGroupService, GroupService>();
@@ -104,7 +106,9 @@ public static class ServiceCollectionExtensions
             ILoadSheetData sheetsService = p.GetRequiredService<ILoadSheetData>();
             ILogger<ReturnNotificationService> logger =
                 p.GetRequiredService<ILogger<ReturnNotificationService>>();
-            return new ReturnNotificationService(sheetsService, config, logger);
+            ReturnDataCache cache = p.GetRequiredService<ReturnDataCache>();
+            IClock clock = p.GetRequiredService<IClock>();
+            return new ReturnNotificationService(sheetsService, config, logger, cache, clock);
         });
 
         collection.AddScoped<IPaymentNotificationService, PaymentNotificationService>();

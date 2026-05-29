@@ -30,8 +30,8 @@ public class LoadSheetData : ILoadSheetData
 
         if (values is null || values.Count == 0)
         {
-            _logger.LogWarning("Data not found");
-            ArgumentNullException.ThrowIfNull(values);
+            _logger.LogWarning("Google Sheets returned no data for range {List}!{Range}", _sheetsConfig.List, _sheetsConfig.Range);
+            return [];
         }
 
         List<RowSheet> rowSheets = [];
@@ -81,7 +81,9 @@ public class LoadSheetData : ILoadSheetData
                 GetStringValue(row, _sheetsConfig.ColumIndex.Organization),
                 GetBoolValue(row, _sheetsConfig.ColumIndex.SentStatementToTourist),
                 GetBoolValue(row, _sheetsConfig.ColumIndex.GetStatementFromTourist),
-                GetBoolValue(row, _sheetsConfig.ColumIndex.Completed));
+                GetOptionalBoolValue(row, _sheetsConfig.ColumIndex.SentStatementToAccounting),
+                GetOptionalBoolValue(row, _sheetsConfig.ColumIndex.ReceiptPrinted),
+                GetOptionalBoolValue(row, _sheetsConfig.ColumIndex.SentApplicationToTourOperator));
         }
         catch (Exception ex)
         {
@@ -92,6 +94,12 @@ public class LoadSheetData : ILoadSheetData
     private bool GetBoolValue(IList<object> row, int index)
     {
         return row[index].ToString() == "TRUE";
+    }
+
+    /// <summary>Returns false when the column has not yet been added to the sheet.</summary>
+    private bool GetOptionalBoolValue(IList<object> row, int index)
+    {
+        return index >= 0 && index < row.Count && row[index].ToString() == "TRUE";
     }
 
     private string GetStringValue(IList<object> row, int index)
