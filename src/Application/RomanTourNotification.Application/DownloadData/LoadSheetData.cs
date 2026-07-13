@@ -41,6 +41,9 @@ public class LoadSheetData : ILoadSheetData
             if (row.Count <= 0 || string.IsNullOrEmpty(row[0].ToString()))
                 continue;
 
+            if (row[0].ToString() == "Итого:")
+                break;
+
             RowSheet? rowData = GetRow(row);
 
             if (rowData is null)
