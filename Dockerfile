@@ -15,6 +15,8 @@ COPY ["src/Presentation/RomanTourNotification.Presentation.TelegramBot/RomanTour
 COPY ["src/Application/RomanTourNotification.Application.Contracts/RomanTourNotification.Application.Contracts.csproj", "src/Application/RomanTourNotification.Application.Contracts/"]
 COPY ["src/Application/RomanTourNotification.Application.Abstractions/RomanTourNotification.Application.Abstractions.csproj", "src/Application/RomanTourNotification.Application.Abstractions/"]
 COPY ["src/Application/RomanTourNotification.Application/RomanTourNotification.Application.csproj", "src/Application/RomanTourNotification.Application/"]
+COPY ["src/Domain/RomanTourNotification.Domain/RomanTourNotification.Domain.csproj", "src/Domain/RomanTourNotification.Domain/"]
+COPY ["src/Infrastructure/RomanTourNotification.Infrastructure.Integrations/RomanTourNotification.Infrastructure.Integrations.csproj", "src/Infrastructure/RomanTourNotification.Infrastructure.Integrations/"]
 COPY ["src/Infrastructure/RomanTourNotification.Infrastructure.Persistence/RomanTourNotification.Infrastructure.Persistence.csproj", "src/Infrastructure/RomanTourNotification.Infrastructure.Persistence/"]
 
 RUN dotnet restore "src/RomanTourNotification/RomanTourNotification.csproj"

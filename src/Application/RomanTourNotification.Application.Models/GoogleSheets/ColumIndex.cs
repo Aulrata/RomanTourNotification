@@ -10,11 +10,17 @@ public class ColumIndex
 
     public int Organization { get; set; }
 
+    public int SentApplicationToTourOperator { get; set; }
+
     public int SentStatementToTourist { get; set; }
 
     public int GetStatementFromTourist { get; set; }
 
-    public int Completed { get; set; }
+    public int SentStatementToAccounting { get; set; }
+
+    public int ReceiptPrinted { get; set; }
+
+    public int ReturnedSum { get; set; }
 
     public int MinimumColumns { get; set; }
 }

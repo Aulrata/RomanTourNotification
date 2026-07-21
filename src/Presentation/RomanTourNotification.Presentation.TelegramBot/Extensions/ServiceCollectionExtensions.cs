@@ -7,7 +7,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddTelegramBot(this IServiceCollection collection)
     {
-        collection.AddSingleton<NotificationBotReceiving>();
+        collection.AddHostedService<NotificationBotReceiving>();
         return collection;
     }
 }

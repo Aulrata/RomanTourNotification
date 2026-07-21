@@ -15,8 +15,6 @@ public class ReceiptNotificationService : IReceiptNotificationService
     private readonly ILogger<ReceiptNotificationService> _logger;
     private readonly ILoadBills _loadBills;
     private readonly ILoadDataService _loadDataService;
-    private string _currentUrl = string.Empty;
-    private bool _haveReceipts = false;
 
     public ReceiptNotificationService(
         ILoadBills loadBills,
@@ -31,12 +29,13 @@ public class ReceiptNotificationService : IReceiptNotificationService
     public async Task<string> GetReceiptMessageAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
         var builder = new StringBuilder();
-        _haveReceipts = false;
-        await GetClientReceiptMessageAsync(dateDto, builder, cancellationToken);
-        builder.AppendLine();
-        await GetCloseReceiptMessageAsync(dateDto, builder, cancellationToken);
+        bool haveReceipts = false;
 
-        if (!_haveReceipts)
+        haveReceipts |= await AppendClientReceiptsAsync(dateDto, builder, cancellationToken);
+        builder.AppendLine();
+        haveReceipts |= await AppendCloseReceiptsAsync(dateDto, builder, cancellationToken);
+
+        if (!haveReceipts)
         {
             builder.Clear();
             builder.AppendLine("Нет чеков");
@@ -45,59 +44,71 @@ public class ReceiptNotificationService : IReceiptNotificationService
         return builder.ToString();
     }
 
-    private async Task GetCloseReceiptMessageAsync(DateDto dateDto, StringBuilder builder, CancellationToken cancellationToken)
+    private async Task<bool> AppendCloseReceiptsAsync(
+        DateDto dateDto,
+        StringBuilder builder,
+        CancellationToken cancellationToken)
     {
-        IEnumerable<LoadedData> loadedDataList = await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
+        IEnumerable<LoadedData> loadedDataList =
+            await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
+
         _logger.LogInformation("Start creating close receipt message");
+
+        bool hasAny = false;
+
         foreach (LoadedData loadedData in loadedDataList)
         {
             IEnumerable<Request>? requests = loadedData.Requests;
-            _currentUrl = loadedData.Url;
+            string baseUrl = loadedData.Url;
+
             if (requests is null)
                 continue;
 
             IEnumerable<Request> filteredRequests = requests
-                .Where(r => r is not { Status:
-                                                    RequestStatus.ApplicationClosed or
-                                                    RequestStatus.Cancelled or
-                                                    RequestStatus.Test }
-
-                                && r.DateBeginAsDate < DateTime.Today.Date)
+                .Where(r => r is not { Status: RequestStatus.ApplicationClosed or RequestStatus.Cancelled or RequestStatus.Test }
+                             && r.DateBeginAsDate < DateTime.Today.Date)
                 .ToList();
 
             if (!filteredRequests.Any())
                 continue;
 
             builder.Append("<u>Нет закрывающих чеков</u>\n");
-            _haveReceipts = true;
+            hasAny = true;
+
             foreach (Request request in filteredRequests)
             {
-                string message = $"""
-                                 
+                builder.Append($"""
+
                                  Турист: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName} 
-                                 Заявка: <a href="{_currentUrl}{request.IdSystem}">{request.IdSystem}</a>  
+                                 Заявка: <a href="{baseUrl}{request.IdSystem}">{request.IdSystem}</a>  
                                  ИП: {request.CompanyNameShort}
-                                 
-                                 """;
-                builder.Append(message);
+
+                                 """);
             }
         }
 
         _logger.LogInformation("Stop creating close receipt message");
+        return hasAny;
     }
 
-    private async Task GetClientReceiptMessageAsync(DateDto dateDto, StringBuilder builder, CancellationToken cancellationToken)
+    private async Task<bool> AppendClientReceiptsAsync(
+        DateDto dateDto,
+        StringBuilder builder,
+        CancellationToken cancellationToken)
     {
         IEnumerable<Bill> bills = (await _loadBills.GetLoadedBillsAsync(cancellationToken)).ToList();
-        IEnumerable<LoadedData> loadedDataList = await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
-        List<Request> filteredRequests = [];
+        IEnumerable<LoadedData> loadedDataList =
+            await _loadDataService.GetLoadedRequestsAsync(dateDto, cancellationToken);
+
+        List<(Request Request, string BaseUrl)> filteredRequests = [];
         CultureInfo invariantCulture = CultureInfo.InvariantCulture;
 
         _logger.LogInformation("Start creating client receipt message");
+
         foreach (LoadedData loadedData in loadedDataList)
         {
             IEnumerable<Request>? requests = loadedData.Requests;
-            _currentUrl = loadedData.Url;
+            string baseUrl = loadedData.Url;
 
             if (requests is null)
                 continue;
@@ -112,11 +123,11 @@ public class ReceiptNotificationService : IReceiptNotificationService
             if (ids.IsEmpty)
                 continue;
 
-            IEnumerable<Request> fullRequestList = await _loadDataService.GetRequestsByIdsAsync(ids, cancellationToken);
+            IEnumerable<Request> fullRequestList =
+                await _loadDataService.GetRequestsByIdsAsync(ids, cancellationToken);
 
             foreach (Request request in fullRequestList)
             {
-                // _logger.LogDebug($"Request {request.Id}: CalcPrice={request.CalcPrice}, CalcClient={request.CalcClient}, ClientDebt={request.ClientDebt}");
                 IEnumerable<Bill> billsByRequest = bills
                     .Where(b => b.RequestId == request.Id &&
                                 b.GetDate.Date != DateTime.Today.Date)
@@ -135,35 +146,34 @@ public class ReceiptNotificationService : IReceiptNotificationService
                     .Sum(p => p.Price);
 
                 decimal billSum = billsByRequest.Sum(b => b.PriceDecimal);
-
                 request.PaymentDebt = billSum - paymentSum;
+
                 if (request.PaymentDebt <= 0)
                     continue;
 
-                filteredRequests.Add(request);
+                filteredRequests.Add((request, baseUrl));
             }
         }
 
         if (filteredRequests.Count == 0)
-            return;
+            return false;
 
         builder.Append("<u>Нет чека клиентам</u>\n");
-        _haveReceipts = true;
         var ruCulture = new CultureInfo("ru-RU");
-        foreach (Request request in filteredRequests)
+
+        foreach ((Request request, string baseUrl) in filteredRequests)
         {
-            string message = $"""
+            builder.Append($"""
 
                              Турист: {request.ClientSurname} {request.ClientFirstName} {request.ClientMiddleName}
                              Сумма: {request.PaymentDebt.ToString("C", ruCulture)}
-                             Заявка: <a href="{_currentUrl}{request.IdSystem}">{request.IdSystem}</a>  
+                             Заявка: <a href="{baseUrl}{request.IdSystem}">{request.IdSystem}</a>  
                              ИП: {request.CompanyNameShort}
-                             
-                             """;
 
-            builder.Append(message);
+                             """);
         }
 
         _logger.LogInformation("Stop creating client receipt message");
+        return true;
     }
 }
