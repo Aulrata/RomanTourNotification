@@ -85,7 +85,9 @@ public class ReturnNotificationService : IReturnNotificationService
         if (_cache.LastLoaded.Date == _clock.UtcNow.Date)
             return;
 
-        IEnumerable<RowSheet> rows = await _sheetsData.GetRowSheetsAsync(cancellationToken);
+        IEnumerable<RowSheet> rows = (await _sheetsData.GetRowSheetsAsync(cancellationToken))
+            .Where(r => string.IsNullOrEmpty(r.ReturnedSum));
+
         _cache.Update(rows, _clock.UtcNow);
     }
 
@@ -104,7 +106,7 @@ public class ReturnNotificationService : IReturnNotificationService
         //   PendingReceipt    → print receipt
         (Func<RowSheet, bool> Filter, string? Title)[] sections =
         [
-            (r => string.IsNullOrEmpty(r.Sum) && !r.SentApplicationToTourOperator,
+            (r => string.IsNullOrEmpty(r.Sum) && !r.GetSentApplicationToTourOperator,
                 _config.TaskDescriptions?.SentApplicationToTourOperatorTask),
 
             (r => !string.IsNullOrEmpty(r.Sum) && r.Status == ReturnStatus.PendingSend,

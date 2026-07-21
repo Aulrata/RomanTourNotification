@@ -11,8 +11,11 @@ public record RowSheet(
     bool GetStatementFromTourist,
     bool SentStatementToAccounting,
     bool ReceiptPrinted,
-    bool SentApplicationToTourOperator)
+    string SentApplicationToTourOperatorDate,
+    string ReturnedSum)
 {
+    public bool GetSentApplicationToTourOperator { get; } = !string.IsNullOrEmpty(SentApplicationToTourOperatorDate);
+
     /// <summary>
     /// Gets the pipeline stage this case is at (Branch B: Sum not empty).
     /// Linear progression: each step requires all previous flags to be true.
@@ -36,10 +39,15 @@ public record RowSheet(
 
     public override string ToString()
     {
-        return $"""
-                Турист: {LastName}, 
-                Сумма: {Sum}, 
-                ИП: {Organization}
-                """;
+        return string.IsNullOrEmpty(Sum) ?
+            $"""
+            Турист: {LastName}, 
+            ИП: {Organization}
+            """ :
+            $"""
+            Турист: {LastName}, 
+            Сумма: {Sum}, 
+            ИП: {Organization}
+            """;
     }
 }

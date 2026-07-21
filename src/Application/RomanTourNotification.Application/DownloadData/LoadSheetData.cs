@@ -55,6 +55,25 @@ public class LoadSheetData : ILoadSheetData
         return rowSheets.Skip(1);
     }
 
+    /// <summary>
+    /// Missing index is treated as false — Sheets omits trailing empty cells from the row.
+    /// </summary>
+    private static bool GetBoolValue(IList<object> row, int index)
+    {
+        return index >= 0 && index < row.Count && row[index].ToString() == "TRUE";
+    }
+
+    /// <summary>
+    /// Missing index is treated as empty — Sheets omits trailing empty cells from the row.
+    /// </summary>
+    private static string GetStringValue(IList<object> row, int index)
+    {
+        if (index < 0 || index >= row.Count)
+            return string.Empty;
+
+        return row[index].ToString()?.Trim() ?? string.Empty;
+    }
+
     private RowSheet? GetRow(IList<object>? row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -65,11 +84,17 @@ public class LoadSheetData : ILoadSheetData
             return null;
         }
 
-        if (row.Count < _sheetsConfig.ColumIndex.MinimumColumns)
+        // Google Sheets Values API omits trailing empty cells, so a row with empty ReturnedSum
+        // may be shorter than MinimumColumns. Require only columns up to (not including) ReturnedSum.
+        int minimumRequired = Math.Min(
+            _sheetsConfig.ColumIndex.MinimumColumns,
+            _sheetsConfig.ColumIndex.ReturnedSum);
+
+        if (row.Count < minimumRequired)
         {
             _logger.LogWarning(
                 "Row count is less than minimum columns. Minimum {MinimumColumns}, current {Count}",
-                _sheetsConfig.ColumIndex.MinimumColumns,
+                minimumRequired,
                 row.Count);
 
             return null;
@@ -84,29 +109,14 @@ public class LoadSheetData : ILoadSheetData
                 GetStringValue(row, _sheetsConfig.ColumIndex.Organization),
                 GetBoolValue(row, _sheetsConfig.ColumIndex.SentStatementToTourist),
                 GetBoolValue(row, _sheetsConfig.ColumIndex.GetStatementFromTourist),
-                GetOptionalBoolValue(row, _sheetsConfig.ColumIndex.SentStatementToAccounting),
-                GetOptionalBoolValue(row, _sheetsConfig.ColumIndex.ReceiptPrinted),
-                GetOptionalBoolValue(row, _sheetsConfig.ColumIndex.SentApplicationToTourOperator));
+                GetBoolValue(row, _sheetsConfig.ColumIndex.SentStatementToAccounting),
+                GetBoolValue(row, _sheetsConfig.ColumIndex.ReceiptPrinted),
+                GetStringValue(row, _sheetsConfig.ColumIndex.SentApplicationToTourOperator),
+                GetStringValue(row, _sheetsConfig.ColumIndex.ReturnedSum));
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException($"Ошибка при парсинге данных. {ex.Message} ", ex);
         }
-    }
-
-    private bool GetBoolValue(IList<object> row, int index)
-    {
-        return row[index].ToString() == "TRUE";
-    }
-
-    /// <summary>Returns false when the column has not yet been added to the sheet.</summary>
-    private bool GetOptionalBoolValue(IList<object> row, int index)
-    {
-        return index >= 0 && index < row.Count && row[index].ToString() == "TRUE";
-    }
-
-    private string GetStringValue(IList<object> row, int index)
-    {
-        return row[index].ToString()?.Trim() ?? string.Empty;
     }
 }
