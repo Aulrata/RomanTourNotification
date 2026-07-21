@@ -20,5 +20,7 @@ public class ColumIndex
 
     public int ReceiptPrinted { get; set; }
 
+    public int ReturnedSum { get; set; }
+
     public int MinimumColumns { get; set; }
 }
