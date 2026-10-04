@@ -50,18 +50,7 @@ public static class ServiceCollectionExtensions
         collection.Configure<List<ApiSettings>>(configuration.GetSection("ApiSettings"));
 
         collection.AddSingleton<TimeSettings>(provider =>
-        {
-            TimeSettings timeSettings = provider.GetRequiredService<IOptions<TimeSettings>>().Value;
-            return new TimeSettings
-            {
-                HoursUtc = timeSettings.HoursUtc,
-                Minutes = timeSettings.Minutes,
-                ReturnHoursUtc = timeSettings.ReturnHoursUtc,
-                ReturnMinute = timeSettings.ReturnMinute,
-                ReceiptHoursUtc = timeSettings.ReceiptHoursUtc,
-                ReceiptMinutes = timeSettings.ReceiptMinutes,
-            };
-        });
+            provider.GetRequiredService<IOptions<TimeSettings>>().Value);
 
         collection.AddHttpClient();
         collection.AddScoped<IGatewayService, GatewayService>(provider =>

@@ -2,15 +2,16 @@ namespace RomanTourNotification.Application.Models.EnrichmentNotification;
 
 public class TimeSettings
 {
-    public int HoursUtc { get; init; }
+    /// <summary>Gets the UTC times of day ("HH:mm") for the main notifications.</summary>
+    public IReadOnlyCollection<TimeSpan> MainTimesUtc { get; init; } = [];
 
-    public int Minutes { get; init; }
+    /// <summary>Gets the UTC times of day ("HH:mm") for the Wednesday return notifications.</summary>
+    public IReadOnlyCollection<TimeSpan> ReturnTimesUtc { get; init; } = [];
 
-    public int ReturnHoursUtc { get; init; }
+    /// <summary>Gets the UTC times of day ("HH:mm") at which receipt notifications are sent.</summary>
+    public IReadOnlyCollection<TimeSpan> ReceiptTimesUtc { get; init; } = [];
 
-    public int ReturnMinute { get; init; }
-
-    public int ReceiptHoursUtc { get; init; }
-
-    public int ReceiptMinutes { get; init; }
+    /// <summary>Returns true if <paramref name="utcNow"/> falls on one of <paramref name="times"/> (to the minute).</summary>
+    public static bool IsSendTime(IEnumerable<TimeSpan> times, DateTime utcNow)
+        => times.Any(t => t.Hours == utcNow.Hour && t.Minutes == utcNow.Minute);
 }

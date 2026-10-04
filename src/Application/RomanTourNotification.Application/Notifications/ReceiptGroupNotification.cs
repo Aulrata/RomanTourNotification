@@ -37,8 +37,7 @@ public class ReceiptGroupNotification
     /// <inheritdoc/>
     public bool ShouldSend(DateTime utcNow, DayOfWeek today)
         => today is not DayOfWeek.Saturday and not DayOfWeek.Sunday
-           && utcNow.Hour == _timeSettings.ReceiptHoursUtc
-           && utcNow.Minute == _timeSettings.ReceiptMinutes;
+           && TimeSettings.IsSendTime(_timeSettings.ReceiptTimesUtc, utcNow);
 
     /// <inheritdoc/>
     public async Task SendAsync(CancellationToken cancellationToken)
