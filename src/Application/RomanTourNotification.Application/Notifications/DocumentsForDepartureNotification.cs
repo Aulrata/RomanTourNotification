@@ -37,8 +37,7 @@ public class DocumentsForDepartureNotification
     /// <inheritdoc/>
     public bool ShouldSend(DateTime utcNow, DayOfWeek today)
         => today is not DayOfWeek.Saturday and not DayOfWeek.Sunday
-           && utcNow.Hour == _timeSettings.HoursUtc
-           && utcNow.Minute == _timeSettings.Minutes;
+           && TimeSettings.IsSendTime(_timeSettings.MainTimesUtc, utcNow);
 
     /// <inheritdoc/>
     public async Task SendAsync(CancellationToken cancellationToken)

@@ -36,8 +36,7 @@ public class AirTicketsNotification
 
     /// <inheritdoc/>
     public bool ShouldSend(DateTime utcNow, DayOfWeek today)
-        => utcNow.Hour == _timeSettings.HoursUtc
-           && utcNow.Minute == _timeSettings.Minutes;
+        => TimeSettings.IsSendTime(_timeSettings.MainTimesUtc, utcNow);
 
     /// <inheritdoc/>
     public async Task SendAsync(CancellationToken cancellationToken)

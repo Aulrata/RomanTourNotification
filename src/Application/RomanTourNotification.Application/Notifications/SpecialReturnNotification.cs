@@ -38,8 +38,7 @@ public class SpecialReturnNotification : TelegramNotificationBase, IScheduledNot
     /// <inheritdoc/>
     public bool ShouldSend(DateTime utcNow, DayOfWeek today)
         => today is DayOfWeek.Wednesday
-           && utcNow.Hour == _timeSettings.ReturnHoursUtc
-           && utcNow.Minute == _timeSettings.ReturnMinute;
+           && TimeSettings.IsSendTime(_timeSettings.ReturnTimesUtc, utcNow);
 
     /// <inheritdoc/>
     public async Task SendAsync(CancellationToken cancellationToken)
