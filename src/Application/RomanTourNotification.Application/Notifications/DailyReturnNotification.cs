@@ -2,8 +2,8 @@ using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Contracts.Notifications;
 using RomanTourNotification.Application.Contracts.ReturnNotification;
-using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Groups;
+using RomanTourNotification.Application.Models.Notifications;
 using RomanTourNotification.Application.Notifications.Base;
 using RomanTourNotification.Domain.ValueObjects;
 using Telegram.Bot;
@@ -11,7 +11,7 @@ using Telegram.Bot;
 namespace RomanTourNotification.Application.Notifications;
 
 /// <summary>
-/// Sends the daily return summary to groups that have no assigned manager (Mon–Fri).
+/// Sends the daily return summary to groups that have no assigned manager (schedule: <see cref="ScheduleSettings.DailyReturn"/>).
 /// Also handles forced sends from the bot, in which case it sends both the manager-specific
 /// return message and the complete daily summary for the given group.
 /// </summary>
@@ -20,7 +20,7 @@ public class DailyReturnNotification
 {
     private readonly IGroupService _groupService;
     private readonly IReturnNotificationService _returnNotificationService;
-    private readonly TimeSettings _timeSettings;
+    private readonly ScheduleSettings _schedules;
 
     /// <summary>Initializes a new instance of the <see cref="DailyReturnNotification"/> class.</summary>
     public DailyReturnNotification(
@@ -28,12 +28,12 @@ public class DailyReturnNotification
         ITelegramBotClient botClient,
         IGroupService groupService,
         IReturnNotificationService returnNotificationService,
-        TimeSettings timeSettings)
+        ScheduleSettings schedules)
         : base(logger, botClient)
     {
         _groupService = groupService;
         _returnNotificationService = returnNotificationService;
-        _timeSettings = timeSettings;
+        _schedules = schedules;
     }
 
     /// <inheritdoc/>
@@ -41,8 +41,7 @@ public class DailyReturnNotification
 
     /// <inheritdoc/>
     public bool ShouldSend(DateTime utcNow, DayOfWeek today)
-        => today is not DayOfWeek.Saturday and not DayOfWeek.Sunday
-           && TimeSettings.IsSendTime(_timeSettings.MainTimesUtc, utcNow);
+        => _schedules.DailyReturn.IsDue(utcNow, today);
 
     /// <inheritdoc/>
     public async Task SendAsync(CancellationToken cancellationToken)

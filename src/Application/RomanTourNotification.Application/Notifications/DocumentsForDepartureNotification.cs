@@ -4,18 +4,19 @@ using RomanTourNotification.Application.Contracts.Messages;
 using RomanTourNotification.Application.Contracts.Notifications;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Groups;
+using RomanTourNotification.Application.Models.Notifications;
 using RomanTourNotification.Application.Notifications.Base;
 using Telegram.Bot;
 
 namespace RomanTourNotification.Application.Notifications;
 
-/// <summary>Sends "документы на вылет" notifications. Runs Mon–Fri at the main scheduled time.</summary>
+/// <summary>Sends "документы на вылет" notifications. Schedule: <see cref="ScheduleSettings.DocumentsForDeparture"/>.</summary>
 public class DocumentsForDepartureNotification
     : TelegramNotificationBase, IScheduledNotification, IForcedNotification
 {
     private readonly IGroupService _groupService;
     private readonly IMessageHandlerService _messageHandlerService;
-    private readonly TimeSettings _timeSettings;
+    private readonly ScheduleSettings _schedules;
 
     /// <summary>Initializes a new instance of the <see cref="DocumentsForDepartureNotification"/> class.</summary>
     public DocumentsForDepartureNotification(
@@ -23,12 +24,12 @@ public class DocumentsForDepartureNotification
         ITelegramBotClient botClient,
         IGroupService groupService,
         IMessageHandlerService messageHandlerService,
-        TimeSettings timeSettings)
+        ScheduleSettings schedules)
         : base(logger, botClient)
     {
         _groupService = groupService;
         _messageHandlerService = messageHandlerService;
-        _timeSettings = timeSettings;
+        _schedules = schedules;
     }
 
     /// <inheritdoc/>
@@ -36,8 +37,7 @@ public class DocumentsForDepartureNotification
 
     /// <inheritdoc/>
     public bool ShouldSend(DateTime utcNow, DayOfWeek today)
-        => today is not DayOfWeek.Saturday and not DayOfWeek.Sunday
-           && TimeSettings.IsSendTime(_timeSettings.MainTimesUtc, utcNow);
+        => _schedules.DocumentsForDeparture.IsDue(utcNow, today);
 
     /// <inheritdoc/>
     public async Task SendAsync(CancellationToken cancellationToken)

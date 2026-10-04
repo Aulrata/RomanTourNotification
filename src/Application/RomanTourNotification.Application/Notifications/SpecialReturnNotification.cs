@@ -2,8 +2,8 @@ using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.Groups;
 using RomanTourNotification.Application.Contracts.Notifications;
 using RomanTourNotification.Application.Contracts.ReturnNotification;
-using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Groups;
+using RomanTourNotification.Application.Models.Notifications;
 using RomanTourNotification.Application.Notifications.Base;
 using RomanTourNotification.Domain.ValueObjects;
 using Telegram.Bot;
@@ -11,7 +11,7 @@ using Telegram.Bot;
 namespace RomanTourNotification.Application.Notifications;
 
 /// <summary>
-/// Sends manager-specific return messages every Wednesday.
+/// Sends manager-specific return messages (schedule: <see cref="ScheduleSettings.SpecialReturn"/>).
 /// Only implements <see cref="IScheduledNotification"/> — there is no forced-send variant
 /// for this type; the bot's "Return" forced send is handled by <see cref="DailyReturnNotification"/>.
 /// </summary>
@@ -19,7 +19,7 @@ public class SpecialReturnNotification : TelegramNotificationBase, IScheduledNot
 {
     private readonly IGroupService _groupService;
     private readonly IReturnNotificationService _returnNotificationService;
-    private readonly TimeSettings _timeSettings;
+    private readonly ScheduleSettings _schedules;
 
     /// <summary>Initializes a new instance of the <see cref="SpecialReturnNotification"/> class.</summary>
     public SpecialReturnNotification(
@@ -27,18 +27,17 @@ public class SpecialReturnNotification : TelegramNotificationBase, IScheduledNot
         ITelegramBotClient botClient,
         IGroupService groupService,
         IReturnNotificationService returnNotificationService,
-        TimeSettings timeSettings)
+        ScheduleSettings schedules)
         : base(logger, botClient)
     {
         _groupService = groupService;
         _returnNotificationService = returnNotificationService;
-        _timeSettings = timeSettings;
+        _schedules = schedules;
     }
 
     /// <inheritdoc/>
     public bool ShouldSend(DateTime utcNow, DayOfWeek today)
-        => today is DayOfWeek.Wednesday
-           && TimeSettings.IsSendTime(_timeSettings.ReturnTimesUtc, utcNow);
+        => _schedules.SpecialReturn.IsDue(utcNow, today);
 
     /// <inheritdoc/>
     public async Task SendAsync(CancellationToken cancellationToken)
