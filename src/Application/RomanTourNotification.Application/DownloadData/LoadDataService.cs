@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
+using RomanTourNotification.Application.Abstractions.Time;
 using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.Gateway;
+using RomanTourNotification.Application.DownloadData.Cache;
 using RomanTourNotification.Application.Models.DownloadData;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
@@ -14,41 +16,44 @@ public class LoadDataService : ILoadDataService
 {
     private readonly IGatewayService _gatewayService;
     private readonly IEnumerable<ApiSettings> _apiSettings;
-    private readonly JsonSerializerOptions? _jsonSerializerOptions;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
     private readonly ILogger<LoadDataService> _logger;
-    private readonly List<LoadedData> _loadedData;
-    private DateTime _lastLoadData;
+    private readonly LoadDataCache _cache;
+    private readonly IClock _clock;
 
     public LoadDataService(
         IGatewayService gatewayService,
         ILogger<LoadDataService> logger,
-        IEnumerable<ApiSettings> apiSettings)
+        IEnumerable<ApiSettings> apiSettings,
+        LoadDataCache cache,
+        IClock clock)
     {
         _gatewayService = gatewayService;
         _logger = logger;
         _apiSettings = apiSettings;
+        _cache = cache;
+        _clock = clock;
         _jsonSerializerOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             NumberHandling = JsonNumberHandling.AllowReadingFromString,
         };
-        _loadedData = [];
     }
 
     public async Task<IEnumerable<LoadedData>> GetLoadedRequestsAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
-        if (_lastLoadData.AddHours(1) < DateTime.Now)
-            await GetAllRequestAsync(dateDto, cancellationToken);
+        if (_cache.LastLoaded.AddHours(1) < _clock.UtcNow)
+            await RefreshCacheAsync(dateDto, cancellationToken);
 
-        return _loadedData;
+        return _cache.Data;
     }
 
     public async Task<IEnumerable<Request>> GetRequestsByIdsAsync(ConcurrentBag<int> ids, CancellationToken cancellationToken)
     {
         ConcurrentBag<Request> requests = [];
 
-        var options = new ParallelOptions()
+        var options = new ParallelOptions
         {
             MaxDegreeOfParallelism = 5,
             CancellationToken = cancellationToken,
@@ -73,10 +78,11 @@ public class LoadDataService : ILoadDataService
         return requests;
     }
 
-    private async Task GetAllRequestAsync(DateDto dateDto, CancellationToken cancellationToken)
+    private async Task RefreshCacheAsync(DateDto dateDto, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Start loading all requests data");
-        _loadedData.Clear();
+
+        var freshData = new List<LoadedData>();
 
         foreach (ApiSettings apiSetting in _apiSettings)
         {
@@ -123,9 +129,9 @@ public class LoadDataService : ILoadDataService
             while (page <= root?.PagesAll);
 
             loadData.Requests = data;
-            _loadedData.Add(loadData);
+            freshData.Add(loadData);
         }
 
-        _lastLoadData = DateTime.Now;
+        _cache.Update(freshData, _clock.UtcNow);
     }
 }

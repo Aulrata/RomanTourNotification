@@ -44,9 +44,12 @@ public class GroupRepository : IGroupRepository
     {
         Group? group = await GetByChatIdAsync(chatId, cancellationToken);
 
+        if (group is null)
+            return 0;
+
         const string sql = """
                            DELETE FROM extra_groups
-                           WHERE GROUP_ID = :id;
+                           WHERE group_id = :id;
 
                            DELETE FROM groups
                            WHERE id = :id
@@ -58,7 +61,7 @@ public class GroupRepository : IGroupRepository
         {
             Parameters =
             {
-                new NpgsqlParameter("id", group?.Id),
+                new NpgsqlParameter("id", group.Id),
             },
         };
 
@@ -256,7 +259,7 @@ public class GroupRepository : IGroupRepository
             },
         };
 
-        await command.ExecuteReaderAsync(cancellationToken);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task RemoveGroupTypeByIdAsync(long groupId, GroupType groupType, CancellationToken cancellationToken)
@@ -276,7 +279,7 @@ public class GroupRepository : IGroupRepository
             },
         };
 
-        await command.ExecuteReaderAsync(cancellationToken);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task AddManagerByIdAsync(long groupId, string managerFullname, CancellationToken cancellationToken)
@@ -297,7 +300,7 @@ public class GroupRepository : IGroupRepository
             },
         };
 
-        await command.ExecuteReaderAsync(cancellationToken);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task RemoveManagerByIdAsync(long groupId, CancellationToken cancellationToken)
@@ -317,7 +320,7 @@ public class GroupRepository : IGroupRepository
             },
         };
 
-        await command.ExecuteReaderAsync(cancellationToken);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Group group, CancellationToken cancellationToken)
@@ -325,7 +328,7 @@ public class GroupRepository : IGroupRepository
         const string sql = """
                            UPDATE groups
                            SET title = :group_title
-                           WHERE group_id = :group_id;
+                           WHERE id = :id;
                            """;
 
         await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
@@ -333,11 +336,11 @@ public class GroupRepository : IGroupRepository
         {
             Parameters =
             {
-                new NpgsqlParameter("group_id", group.ChatId),
+                new NpgsqlParameter("id", group.Id),
                 new NpgsqlParameter("group_title", group.Title),
             },
         };
 
-        await command.ExecuteReaderAsync(cancellationToken);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }

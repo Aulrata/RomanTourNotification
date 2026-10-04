@@ -9,7 +9,6 @@
         <PackageReference Include="Google.Apis.Sheets.v4" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-        <PackageReference Include="Telegram.Bot" />
     </ItemGroup>
 
 </Project>

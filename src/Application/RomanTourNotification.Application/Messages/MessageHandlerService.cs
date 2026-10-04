@@ -24,20 +24,48 @@ public class MessageHandlerService : IMessageHandlerService
         _paymentNotificationService = paymentNotificationService;
     }
 
-    public async Task<string> CreateArrivalMessageAsync(DateDto currentDay, Group group, CancellationToken cancellationToken)
+    /// <inheritdoc/>
+    public async Task<string> CreateDocumentsForDepartureMessageAsync(
+        DateDto currentDay,
+        Group group,
+        CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Creating arrival message for group: {Title}", group.Title);
+        _logger.LogInformation("Creating documents-for-departure message for group: {Title}", group.Title);
         var sb = new StringBuilder();
 
-        await _enrichmentNotificationService.GetArrivalByDateAsync(currentDay, sb, group.ManagerFullname, cancellationToken);
+        await _enrichmentNotificationService.GetDocumentsForDepartureAsync(currentDay, sb, group.ManagerFullname, cancellationToken);
 
         if (currentDay.From.DayOfWeek is DayOfWeek.Friday)
-            await CreateArrivalWeekendMessageAsync(currentDay, sb, group.ManagerFullname, cancellationToken);
+        {
+            var saturday = new DateDto(currentDay.From.AddDays(1));
+            await _enrichmentNotificationService.GetDocumentsForDepartureAsync(saturday, sb, group.ManagerFullname, cancellationToken);
 
-        _logger.LogInformation("Arrival message created for group: {Title}", group.Title);
+            var sunday = new DateDto(currentDay.From.AddDays(2));
+            await _enrichmentNotificationService.GetDocumentsForDepartureAsync(sunday, sb, group.ManagerFullname, cancellationToken);
+        }
+
+        _logger.LogInformation("Documents-for-departure message created for group: {Title}", group.Title);
         return sb.ToString();
     }
 
+    /// <inheritdoc/>
+    public async Task<string> CreateAirTicketsMessageAsync(
+        DateDto currentDay,
+        Group group,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Creating air-tickets message for group: {Title}", group.Title);
+        var sb = new StringBuilder();
+
+        // Air tickets run every day, so no Friday weekend preview needed —
+        // Saturday and Sunday notifications are sent automatically on those days.
+        await _enrichmentNotificationService.GetAirTicketsAsync(currentDay, sb, group.ManagerFullname, cancellationToken);
+
+        _logger.LogInformation("Air-tickets message created for group: {Title}", group.Title);
+        return sb.ToString();
+    }
+
+    /// <inheritdoc/>
     public async Task<string> CreatePaymentMessageAsync(DateDto currentDay, Group group, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Creating payment message for group: {Title}", group.Title);
@@ -55,17 +83,13 @@ public class MessageHandlerService : IMessageHandlerService
         return sb.ToString();
     }
 
-    private async Task CreateArrivalWeekendMessageAsync(
-        DateDto currentDay,
-        StringBuilder sb,
-        string managerFullname,
-        CancellationToken cancellationToken)
+    private static string GetMessageDate(DateDto currentDay)
     {
-        var saturdayDay = new DateDto(currentDay.From.AddDays(1));
-        await _enrichmentNotificationService.GetArrivalByDateAsync(saturdayDay, sb, managerFullname, cancellationToken);
+        return $"""
 
-        var sundayDay = new DateDto(currentDay.From.AddDays(2));
-        await _enrichmentNotificationService.GetArrivalByDateAsync(sundayDay, sb, managerFullname, cancellationToken);
+                 <b><u>Доплата туристов на {currentDay.From.Date:dd.MM.yyyy}</u></b>.
+
+                 """;
     }
 
     private async Task CreatePaymentWeekendMessageAsync(
@@ -75,26 +99,11 @@ public class MessageHandlerService : IMessageHandlerService
         CancellationToken cancellationToken)
     {
         var saturdayDay = new DateDto(currentDay.From.AddDays(1));
-        string saturdayGreetings = GetMessageDate(saturdayDay);
-
-        sb.Append(saturdayGreetings);
-
+        sb.Append(GetMessageDate(saturdayDay));
         await _paymentNotificationService.GetPaymentMessageAsync(saturdayDay, sb, managerFullname, cancellationToken);
 
         var sundayDay = new DateDto(currentDay.From.AddDays(2));
-        string sundayGreetings = GetMessageDate(sundayDay);
-
-        sb.Append(sundayGreetings);
-
+        sb.Append(GetMessageDate(sundayDay));
         await _paymentNotificationService.GetPaymentMessageAsync(sundayDay, sb, managerFullname, cancellationToken);
-    }
-
-    private string GetMessageDate(DateDto currentDay)
-    {
-        return $"""
-
-                 <b><u>Доплата туристов на {currentDay.From.Date:dd.MM.yyyy}</u></b>.
-
-                 """;
     }
 }

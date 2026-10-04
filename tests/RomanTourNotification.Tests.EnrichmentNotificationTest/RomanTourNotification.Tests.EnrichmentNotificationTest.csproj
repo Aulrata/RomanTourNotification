@@ -22,8 +22,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\Application\RomanTourNotification.Application.Abstractions\RomanTourNotification.Application.Abstractions.csproj" />
       <ProjectReference Include="..\..\src\Application\RomanTourNotification.Application.Models\RomanTourNotification.Application.Models.csproj" />
       <ProjectReference Include="..\..\src\Application\RomanTourNotification.Application\RomanTourNotification.Application.csproj" />
+      <ProjectReference Include="..\..\src\Infrastructure\RomanTourNotification.Infrastructure.Integrations\RomanTourNotification.Infrastructure.Integrations.csproj" />
     </ItemGroup>
 
 </Project>

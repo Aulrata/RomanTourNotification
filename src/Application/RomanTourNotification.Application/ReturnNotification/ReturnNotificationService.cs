@@ -1,7 +1,11 @@
 using Microsoft.Extensions.Logging;
+using RomanTourNotification.Application.Abstractions.Time;
 using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.ReturnNotification;
 using RomanTourNotification.Application.Models.GoogleSheets;
+using RomanTourNotification.Application.ReturnNotification.Cache;
+using RomanTourNotification.Domain.ReturnWorkflow;
+using RomanTourNotification.Domain.ValueObjects;
 using System.Text;
 
 namespace RomanTourNotification.Application.ReturnNotification;
@@ -11,100 +15,123 @@ public class ReturnNotificationService : IReturnNotificationService
     private readonly ILoadSheetData _sheetsData;
     private readonly GoogleSheetsConfig _config;
     private readonly ILogger<ReturnNotificationService> _logger;
-    private List<RowSheet> _rowSheets;
-    private DateTime _loadData;
+    private readonly ReturnDataCache _cache;
+    private readonly IClock _clock;
 
+    /// <summary>Initializes a new instance of the <see cref="ReturnNotificationService"/> class.</summary>
     public ReturnNotificationService(
         ILoadSheetData sheetsData,
         GoogleSheetsConfig config,
-        ILogger<ReturnNotificationService> logger)
+        ILogger<ReturnNotificationService> logger,
+        ReturnDataCache cache,
+        IClock clock)
     {
         _sheetsData = sheetsData;
         _config = config;
         _logger = logger;
-        _rowSheets = [];
+        _cache = cache;
+        _clock = clock;
     }
 
+    /// <inheritdoc/>
     public async Task<string> GetReturnMessageAsync(string manager, CancellationToken cancellationToken)
     {
-        await LoadDataAsync(cancellationToken);
+        await RefreshCacheAsync(cancellationToken);
 
         string message;
 
         if (!string.IsNullOrEmpty(manager))
         {
-            IEnumerable<RowSheet> filteredRows = _rowSheets
+            IGrouping<string, RowSheet>? managerGroup = _cache.Data
                 .GroupBy(r => r.Manager)
-                .First(x => x.Key.Split(' ').First().Equals(manager, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(x => new ManagerName(x.Key).LastName
+                    .Equals(manager, StringComparison.OrdinalIgnoreCase));
 
-            _logger.LogInformation("Start crating return message for manager: {Manager}", manager);
-            message = GetReturnMessage(filteredRows);
+            if (managerGroup is null)
+            {
+                _logger.LogWarning("No return rows found for manager: {Manager}", manager);
+                return _config.TaskDescriptions?.NoTask ?? "Null";
+            }
+
+            _logger.LogInformation("Creating return message for manager: {Manager}", manager);
+            message = BuildReturnMessage(managerGroup);
             _logger.LogInformation("Created return message for manager: {Manager}", manager);
         }
         else
         {
-            _logger.LogInformation("Start crating return message for all managers");
-            message = GetReturnMessage(_rowSheets);
-            _logger.LogInformation("Start crating return message for all managers");
+            _logger.LogInformation("Creating return message for all managers");
+            message = BuildReturnMessage(_cache.Data);
+            _logger.LogInformation("Created return message for all managers");
         }
 
         return string.IsNullOrEmpty(message) ? _config.TaskDescriptions?.NoTask ?? "Null" : message;
     }
 
+    /// <inheritdoc/>
     public async Task<string> GetReturnCompleteMessageAsync(CancellationToken cancellationToken)
     {
-        await LoadDataAsync(cancellationToken);
+        await RefreshCacheAsync(cancellationToken);
 
-        IEnumerable<RowSheet> completed = _rowSheets
-            .Where(r => r is
-            {
-                SentStatementToTourist: true,
-                GetStatementFromTourist: true,
-                Completed: false,
-            });
+        IEnumerable<RowSheet> pendingReceipt = _cache.Data
+            .Where(r => !string.IsNullOrEmpty(r.Sum) && r.Status == ReturnStatus.PendingReceipt);
 
-        string message = FormateMessage(completed, _config.TaskDescriptions?.CompletedTask);
+        string message = FormatMessage(pendingReceipt, _config.TaskDescriptions?.ReceiptPrintedTask);
 
         return string.IsNullOrEmpty(message) ? _config.TaskDescriptions?.NoTask ?? "Null" : message;
     }
 
-    private async Task LoadDataAsync(CancellationToken cancellationToken)
+    private async Task RefreshCacheAsync(CancellationToken cancellationToken)
     {
-        if (_loadData.Date != DateTime.Now.Date)
-        {
-            _rowSheets = (await _sheetsData.GetRowSheetsAsync(cancellationToken)).ToList();
-            _loadData = DateTime.Now;
-        }
+        if (_cache.LastLoaded.Date == _clock.UtcNow.Date)
+            return;
+
+        IEnumerable<RowSheet> rows = (await _sheetsData.GetRowSheetsAsync(cancellationToken))
+            .Where(r => string.IsNullOrEmpty(r.ReturnedSum));
+
+        _cache.Update(rows, _clock.UtcNow);
     }
 
-    private string GetReturnMessage(IEnumerable<RowSheet> rows)
+    private string BuildReturnMessage(IEnumerable<RowSheet> rows)
     {
-        var sb = new StringBuilder();
+        // Each entry is one section in the message.
+        // To add a new section: add one line here + one property in TaskDescriptions + appsettings.json.
+        //
+        // Branch A — Sum is empty:
+        //   SentApplicationToTourOperator = false → send refund application to tour operator
+        //
+        // Branch B — Sum is not empty (strict linear pipeline, Completed rows are excluded implicitly):
+        //   PendingSend       → send statement to tourist
+        //   PendingReceive    → receive statement from tourist
+        //   PendingAccounting → send statement to accounting
+        //   PendingReceipt    → print receipt
+        (Func<RowSheet, bool> Filter, string? Title)[] sections =
+        [
+            (r => string.IsNullOrEmpty(r.Sum) && !r.GetSentApplicationToTourOperator,
+                _config.TaskDescriptions?.SentApplicationToTourOperatorTask),
+
+            (r => !string.IsNullOrEmpty(r.Sum) && r.Status == ReturnStatus.PendingSend,
+                _config.TaskDescriptions?.SentStatementToTouristTask),
+
+            (r => !string.IsNullOrEmpty(r.Sum) && r.Status == ReturnStatus.PendingReceive,
+                _config.TaskDescriptions?.GetStatementFromTouristTask),
+
+            (r => !string.IsNullOrEmpty(r.Sum) && r.Status == ReturnStatus.PendingAccounting,
+                _config.TaskDescriptions?.SentStatementToAccountingTask),
+
+            (r => !string.IsNullOrEmpty(r.Sum) && r.Status == ReturnStatus.PendingReceipt,
+                _config.TaskDescriptions?.ReceiptPrintedTask),
+        ];
 
         var rowsList = rows.ToList();
+        var sb = new StringBuilder();
 
-        IEnumerable<RowSheet> sentStatementToTourist = rowsList
-            .Where(r => r is
-            {
-                SentStatementToTourist: false,
-                GetStatementFromTourist: false,
-                Completed: false,
-            });
-        sb.Append(FormateMessage(sentStatementToTourist, _config.TaskDescriptions?.SentStatementToTouristTask));
-
-        IEnumerable<RowSheet> getStatementFromTourist = rowsList
-            .Where(r => r is
-            {
-                SentStatementToTourist: true,
-                GetStatementFromTourist: false,
-                Completed: false,
-            });
-        sb.Append(FormateMessage(getStatementFromTourist, _config.TaskDescriptions?.GetStatementFromTouristTask));
+        foreach ((Func<RowSheet, bool> filter, string? title) in sections)
+            sb.Append(FormatMessage(rowsList.Where(filter), title));
 
         return sb.ToString();
     }
 
-    private string FormateMessage(IEnumerable<RowSheet> rows, string? task)
+    private string FormatMessage(IEnumerable<RowSheet> rows, string? task)
     {
         var rowGroup = rows.GroupBy(r => r.Manager).OrderBy(r => r.Key).ToList();
 

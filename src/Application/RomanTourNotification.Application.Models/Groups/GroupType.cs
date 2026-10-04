@@ -10,12 +10,15 @@ public enum GroupType
     [Description("Оплата")]
     Payment = 1,
 
-    [Description("Документы прибытия")]
-    Arrival = 2,
-
     [Description("Возвраты")]
     Return = 3,
 
     [Description("Чеки")]
     Receipt = 4,
+
+    [Description("Документы на вылет")]
+    DocumentsForDeparture = 5,
+
+    [Description("Авиабилеты")]
+    AirTickets = 6,
 }

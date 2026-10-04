@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Contracts.DownloadData;
 using RomanTourNotification.Application.Contracts.Groups;
@@ -15,53 +17,57 @@ using User = RomanTourNotification.Application.Models.Users.User;
 
 namespace RomanTourNotification.Presentation.TelegramBot.Receiving;
 
-public class NotificationBotReceiving
+public class NotificationBotReceiving : BackgroundService
 {
     private readonly ITelegramBotClient _botClient;
-    private readonly IUserService _userService;
-    private readonly IGroupService _groupService;
-    private readonly ILoadEmployees _loadEmployees;
-    private readonly INotificationService _notificationService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<NotificationBotReceiving> _logger;
 
-    // TODO Учесть усдалеие пользователей
-    private readonly Dictionary<long, User> _users;
+    // TODO Учесть удаление пользователей
+    private readonly Dictionary<long, User> _users = [];
 
     public NotificationBotReceiving(
         ITelegramBotClient botClient,
-        IUserService userService,
-        IGroupService groupService,
-        ILogger<NotificationBotReceiving> logger,
-        ILoadEmployees loadEmployees,
-        INotificationService notificationService)
+        IServiceScopeFactory scopeFactory,
+        ILogger<NotificationBotReceiving> logger)
     {
         _botClient = botClient;
-        _userService = userService;
-        _groupService = groupService;
+        _scopeFactory = scopeFactory;
         _logger = logger;
-        _loadEmployees = loadEmployees;
-        _notificationService = notificationService;
-        _users = [];
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var receiverOptions = new ReceiverOptions { AllowedUpdates = { } };
 
         _botClient.StartReceiving(
             updateHandler: async (bot, update, token) => await HandleUpdateAsync(update, token),
-            errorHandler: async (bot, exception, token) => await HandleErrorAsync(exception, token),
+            errorHandler: (bot, exception, token) =>
+            {
+                _logger.LogError(exception, "Telegram polling error");
+                return Task.CompletedTask;
+            },
             receiverOptions: receiverOptions,
-            cancellationToken: cancellationToken);
+            cancellationToken: stoppingToken);
 
-        Telegram.Bot.Types.User bot = await _botClient.GetMe(cancellationToken);
+        Telegram.Bot.Types.User bot = await _botClient.GetMe(stoppingToken);
         _logger.LogInformation("{Username} started", bot.Username);
+
+        await Task.Delay(Timeout.Infinite, stoppingToken)
+            .ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
     }
 
     private async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
     {
         try
         {
+            await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+            IUserService userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+            IGroupService groupService = scope.ServiceProvider.GetRequiredService<IGroupService>();
+            ILoadEmployees loadEmployees = scope.ServiceProvider.GetRequiredService<ILoadEmployees>();
+            INotificationService notificationService =
+                scope.ServiceProvider.GetRequiredService<INotificationService>();
+
             string text = string.Empty;
             long userId = 0;
             int messageId = 0;
@@ -110,7 +116,7 @@ public class NotificationBotReceiving
 
                     if (!_users.ContainsKey(id))
                     {
-                        User? user = await _userService.GetByChatIdAsync(id, cancellationToken);
+                        User? user = await userService.GetByChatIdAsync(id, cancellationToken);
 
                         if (user is null)
                             return;
@@ -121,15 +127,15 @@ public class NotificationBotReceiving
                     switch (chatMember.NewChatMember.Status)
                     {
                         case ChatMemberStatus.Left:
-                            await DeleteGroup(chatMember, cancellationToken);
+                            await DeleteGroup(chatMember, groupService, cancellationToken);
                             break;
 
                         case ChatMemberStatus.Member:
-                            await AddGroup(chatMember, cancellationToken);
+                            await AddGroup(chatMember, userService, groupService, cancellationToken);
                             break;
                     }
 
-                    break;
+                    return;
             }
 
             if (string.IsNullOrEmpty(text) || userId <= 0)
@@ -137,7 +143,7 @@ public class NotificationBotReceiving
 
             if (!_users.TryGetValue(userId, out User? value))
             {
-                User? user = await _userService.GetByChatIdAsync(userId, cancellationToken);
+                User? user = await userService.GetByChatIdAsync(userId, cancellationToken);
 
                 if (user is null)
                 {
@@ -148,9 +154,9 @@ public class NotificationBotReceiving
                         UserRole.Unspecified,
                         userId,
                         DateTime.Now);
-                    long newUserId = await _userService.CreateAsync(newUser, cancellationToken);
+                    await userService.CreateAsync(newUser, cancellationToken);
 
-                    user = await _userService.GetByChatIdAsync(newUserId, cancellationToken);
+                    user = await userService.GetByChatIdAsync(userId, cancellationToken);
 
                     if (user is null)
                         return;
@@ -165,7 +171,7 @@ public class NotificationBotReceiving
             }
 
             var iterator = new Iterator(text);
-            var handlerServices = new HandlerServices(_userService, _groupService, _loadEmployees, _notificationService);
+            var handlerServices = new HandlerServices(userService, groupService, loadEmployees, notificationService);
             var context =
                 new HandlerContext(value, iterator, _botClient, cancellationToken, handlerServices, messageId);
             var startHandler = new StartHandler();
@@ -176,23 +182,22 @@ public class NotificationBotReceiving
         }
         catch (Exception ex)
         {
-            _logger.LogError("Bot Error: {Message}", ex.Message);
+            _logger.LogError(ex, "Bot update error");
         }
     }
 
-    private Task HandleErrorAsync(Exception exception, CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    private async Task AddGroup(ChatMemberUpdated chatMember, CancellationToken cancellationToken)
+    private async Task AddGroup(
+        ChatMemberUpdated chatMember,
+        IUserService userService,
+        IGroupService groupService,
+        CancellationToken cancellationToken)
     {
         long groupId = chatMember.Chat.Id;
         string groupTitle = chatMember.Chat.Title ?? "Нет данных";
         long idFrom = chatMember.From.Id;
         string userNameFrom = chatMember.From.Username ?? "Нет данных";
 
-        User? user = await _userService.GetByChatIdAsync(idFrom, cancellationToken);
+        User? user = await userService.GetByChatIdAsync(idFrom, cancellationToken);
 
         if (user is null)
         {
@@ -203,11 +208,11 @@ public class NotificationBotReceiving
 
         var group = new Group(0, groupTitle, groupId, user.Id, string.Empty, GroupType.Unspecified, DateTime.Now);
 
-        Group? addedGroup = await _groupService.AddAsync(group, cancellationToken);
+        Group? addedGroup = await groupService.AddAsync(group, cancellationToken);
 
         if (addedGroup is null)
         {
-            Group? oldGroup = await _groupService.GetByChatIdAsync(groupId, cancellationToken);
+            Group? oldGroup = await groupService.GetByChatIdAsync(groupId, cancellationToken);
 
             if (oldGroup is null)
                 return;
@@ -221,7 +226,7 @@ public class NotificationBotReceiving
                 oldGroup.GroupType,
                 oldGroup.CreatedAt);
 
-            await _groupService.UpdateAsync(updatedGroup, cancellationToken);
+            await groupService.UpdateAsync(updatedGroup, cancellationToken);
 
             _logger.LogInformation(
                 "Пользователь {UserName} обновил бота в группе {Title}",
@@ -247,9 +252,12 @@ public class NotificationBotReceiving
         }
     }
 
-    private async Task DeleteGroup(ChatMemberUpdated chatMember, CancellationToken cancellationToken)
+    private async Task DeleteGroup(
+        ChatMemberUpdated chatMember,
+        IGroupService groupService,
+        CancellationToken cancellationToken)
     {
-        long deletedGroup = await _groupService.DeleteAsync(chatMember.Chat.Id, cancellationToken);
+        long deletedGroup = await groupService.DeleteAsync(chatMember.Chat.Id, cancellationToken);
 
         _logger.LogWarning(
             "Пользователь {Username} удалил бота из группы {Title}. Id группы: {GroupId}",
