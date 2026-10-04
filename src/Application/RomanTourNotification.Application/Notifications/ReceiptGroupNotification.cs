@@ -4,18 +4,19 @@ using RomanTourNotification.Application.Contracts.Notifications;
 using RomanTourNotification.Application.Contracts.ReceiptNotification;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Groups;
+using RomanTourNotification.Application.Models.Notifications;
 using RomanTourNotification.Application.Notifications.Base;
 using Telegram.Bot;
 
 namespace RomanTourNotification.Application.Notifications;
 
-/// <summary>Sends "чеки" notifications. Runs Mon–Fri at the receipt scheduled time.</summary>
+/// <summary>Sends "чеки" notifications. Schedule: <see cref="ScheduleSettings.Receipt"/>.</summary>
 public class ReceiptGroupNotification
     : TelegramNotificationBase, IScheduledNotification, IForcedNotification
 {
     private readonly IGroupService _groupService;
     private readonly IReceiptNotificationService _receiptNotificationService;
-    private readonly TimeSettings _timeSettings;
+    private readonly ScheduleSettings _schedules;
 
     /// <summary>Initializes a new instance of the <see cref="ReceiptGroupNotification"/> class.</summary>
     public ReceiptGroupNotification(
@@ -23,12 +24,12 @@ public class ReceiptGroupNotification
         ITelegramBotClient botClient,
         IGroupService groupService,
         IReceiptNotificationService receiptNotificationService,
-        TimeSettings timeSettings)
+        ScheduleSettings schedules)
         : base(logger, botClient)
     {
         _groupService = groupService;
         _receiptNotificationService = receiptNotificationService;
-        _timeSettings = timeSettings;
+        _schedules = schedules;
     }
 
     /// <inheritdoc/>
@@ -36,8 +37,7 @@ public class ReceiptGroupNotification
 
     /// <inheritdoc/>
     public bool ShouldSend(DateTime utcNow, DayOfWeek today)
-        => today is not DayOfWeek.Saturday and not DayOfWeek.Sunday
-           && TimeSettings.IsSendTime(_timeSettings.ReceiptTimesUtc, utcNow);
+        => _schedules.Receipt.IsDue(utcNow, today);
 
     /// <inheritdoc/>
     public async Task SendAsync(CancellationToken cancellationToken)

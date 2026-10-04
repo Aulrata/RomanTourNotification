@@ -7,6 +7,7 @@ using RomanTourNotification.Application.Models.Bots;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Gateway;
 using RomanTourNotification.Application.Models.GoogleSheets;
+using RomanTourNotification.Application.Models.Notifications;
 using RomanTourNotification.Infrastructure.Integrations.Gateway;
 using Telegram.Bot;
 
@@ -46,11 +47,11 @@ public static class ServiceCollectionExtensions
     private static void RegisterGateway(IServiceCollection collection, IConfiguration configuration)
     {
         collection.Configure<ConfigurationService>(configuration.GetSection("ConfigurationService"));
-        collection.Configure<TimeSettings>(configuration.GetSection("TimeSettings"));
+        collection.Configure<ScheduleSettings>(configuration.GetSection("Schedules"));
         collection.Configure<List<ApiSettings>>(configuration.GetSection("ApiSettings"));
 
-        collection.AddSingleton<TimeSettings>(provider =>
-            provider.GetRequiredService<IOptions<TimeSettings>>().Value);
+        collection.AddSingleton<ScheduleSettings>(provider =>
+            provider.GetRequiredService<IOptions<ScheduleSettings>>().Value);
 
         collection.AddHttpClient();
         collection.AddScoped<IGatewayService, GatewayService>(provider =>

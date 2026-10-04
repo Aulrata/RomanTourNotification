@@ -134,34 +134,35 @@ public static class ServiceCollectionExtensions
     /// Registers each notification class once under its concrete type, then maps it to both
     /// <see cref="IScheduledNotification"/> and (where applicable) <see cref="IForcedNotification"/>
     /// via factory delegates — ensuring a single instance per scope regardless of how it is resolved.
+    /// Days and times for each notification come from the "Schedules" configuration section.
     /// </summary>
     private static void RegisterNotifications(IServiceCollection collection)
     {
-        // Documents for departure — weekdays, main time
+        // Documents for departure
         collection.AddScoped<DocumentsForDepartureNotification>();
         collection.AddScoped<IScheduledNotification>(p => p.GetRequiredService<DocumentsForDepartureNotification>());
         collection.AddScoped<IForcedNotification>(p => p.GetRequiredService<DocumentsForDepartureNotification>());
 
-        // Air tickets — every day, main time
+        // Air tickets
         collection.AddScoped<AirTicketsNotification>();
         collection.AddScoped<IScheduledNotification>(p => p.GetRequiredService<AirTicketsNotification>());
         collection.AddScoped<IForcedNotification>(p => p.GetRequiredService<AirTicketsNotification>());
 
-        // Payment — weekdays, main time
+        // Payment
         collection.AddScoped<PaymentGroupNotification>();
         collection.AddScoped<IScheduledNotification>(p => p.GetRequiredService<PaymentGroupNotification>());
         collection.AddScoped<IForcedNotification>(p => p.GetRequiredService<PaymentGroupNotification>());
 
-        // Daily return — weekdays, main time; also handles forced Return sends from bot
+        // Daily return; also handles forced Return sends from bot
         collection.AddScoped<DailyReturnNotification>();
         collection.AddScoped<IScheduledNotification>(p => p.GetRequiredService<DailyReturnNotification>());
         collection.AddScoped<IForcedNotification>(p => p.GetRequiredService<DailyReturnNotification>());
 
-        // Special return — Wednesday only, return time; no forced variant
+        // Special return; no forced variant
         collection.AddScoped<SpecialReturnNotification>();
         collection.AddScoped<IScheduledNotification>(p => p.GetRequiredService<SpecialReturnNotification>());
 
-        // Receipt — weekdays, receipt time
+        // Receipt
         collection.AddScoped<ReceiptGroupNotification>();
         collection.AddScoped<IScheduledNotification>(p => p.GetRequiredService<ReceiptGroupNotification>());
         collection.AddScoped<IForcedNotification>(p => p.GetRequiredService<ReceiptGroupNotification>());

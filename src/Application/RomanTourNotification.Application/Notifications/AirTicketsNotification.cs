@@ -4,18 +4,19 @@ using RomanTourNotification.Application.Contracts.Messages;
 using RomanTourNotification.Application.Contracts.Notifications;
 using RomanTourNotification.Application.Models.EnrichmentNotification;
 using RomanTourNotification.Application.Models.Groups;
+using RomanTourNotification.Application.Models.Notifications;
 using RomanTourNotification.Application.Notifications.Base;
 using Telegram.Bot;
 
 namespace RomanTourNotification.Application.Notifications;
 
-/// <summary>Sends "авиабилеты" notifications. Runs every day (including weekends) at the main scheduled time.</summary>
+/// <summary>Sends "авиабилеты" notifications. Schedule: <see cref="ScheduleSettings.AirTickets"/>.</summary>
 public class AirTicketsNotification
     : TelegramNotificationBase, IScheduledNotification, IForcedNotification
 {
     private readonly IGroupService _groupService;
     private readonly IMessageHandlerService _messageHandlerService;
-    private readonly TimeSettings _timeSettings;
+    private readonly ScheduleSettings _schedules;
 
     /// <summary>Initializes a new instance of the <see cref="AirTicketsNotification"/> class.</summary>
     public AirTicketsNotification(
@@ -23,12 +24,12 @@ public class AirTicketsNotification
         ITelegramBotClient botClient,
         IGroupService groupService,
         IMessageHandlerService messageHandlerService,
-        TimeSettings timeSettings)
+        ScheduleSettings schedules)
         : base(logger, botClient)
     {
         _groupService = groupService;
         _messageHandlerService = messageHandlerService;
-        _timeSettings = timeSettings;
+        _schedules = schedules;
     }
 
     /// <inheritdoc/>
@@ -36,7 +37,7 @@ public class AirTicketsNotification
 
     /// <inheritdoc/>
     public bool ShouldSend(DateTime utcNow, DayOfWeek today)
-        => TimeSettings.IsSendTime(_timeSettings.MainTimesUtc, utcNow);
+        => _schedules.AirTickets.IsDue(utcNow, today);
 
     /// <inheritdoc/>
     public async Task SendAsync(CancellationToken cancellationToken)
