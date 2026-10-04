@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RomanTourNotification.Application.Abstractions.Time;
 using RomanTourNotification.Application.Contracts.Notifications;
+using RomanTourNotification.Application.Models.Notifications;
 
 namespace RomanTourNotification.Application.Bots;
 
@@ -15,22 +16,26 @@ public class NotificationsBackgroundService : BackgroundService
     private readonly ILogger<NotificationsBackgroundService> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IClock _clock;
+    private readonly ScheduleSettings _schedules;
 
     /// <summary>Initializes a new instance of the <see cref="NotificationsBackgroundService"/> class.</summary>
     public NotificationsBackgroundService(
         ILogger<NotificationsBackgroundService> logger,
         IServiceScopeFactory scopeFactory,
-        IClock clock)
+        IClock clock,
+        ScheduleSettings schedules)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
         _clock = clock;
+        _schedules = schedules;
     }
 
     /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Notification background service started");
+        LogSchedules();
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -57,6 +62,26 @@ public class NotificationsBackgroundService : BackgroundService
             {
                 await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
             }
+        }
+    }
+
+    private void LogSchedules()
+    {
+        foreach ((string name, NotificationSchedule schedule) in _schedules.GetAll())
+        {
+            if (schedule.TimesUtc.Count == 0 || schedule.Days.Count == 0)
+            {
+                _logger.LogWarning(
+                    "Schedule {Notification} is empty (no TimesUtc or Days in Schedules config), notification will not be sent",
+                    name);
+                continue;
+            }
+
+            _logger.LogInformation(
+                "Schedule {Notification}: {TimesUtc} UTC on {Days}",
+                name,
+                string.Join(", ", schedule.TimesUtc.Select(t => t.ToString(@"hh\:mm"))),
+                string.Join(", ", schedule.Days));
         }
     }
 }
